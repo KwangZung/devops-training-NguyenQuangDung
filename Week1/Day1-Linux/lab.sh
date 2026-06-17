@@ -16,5 +16,5 @@ echo -e "\n4. Lấy hostname + kernel version + uptime, ghi vào system-info.txt
 echo "host=$(hostname)" > system-info.txt
 echo "kernel=$(uname -r)" >> system-info.txt
 echo "uptime=$(uptime -p)" >> system-info.txt
-echo -e "\nNội dung file system-info.txt:\n"
+echo -e "\nNội dung của file system-info.txt:\n"
 cat system-info.txt
