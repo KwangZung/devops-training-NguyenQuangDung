@@ -1,0 +1,23 @@
+[Unit]
+Description=Server Resource Monitoring Service
+After=network.target
+
+[Service]
+Type=simple
+User=yungn
+
+# Thư mục làm việc (cần tạo thư mục này: sudo mkdir -p /opt/monitor)
+WorkingDirectory=/opt/monitor
+
+# Gọi script bash để giám sát
+ExecStart=/bin/bash /opt/monitor/monitor.sh
+
+# Đảm bảo tự động hồi sinh nếu script bị văng lỗi
+Restart=on-failure
+RestartSec=5
+
+# Cấu hình systemd để khi stop service nó sẽ gửi chuẩn SIGINT (như Ctrl+C) thay vì SIGTERM mặc định
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target
