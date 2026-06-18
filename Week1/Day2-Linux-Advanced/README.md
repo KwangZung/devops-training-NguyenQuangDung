@@ -11,7 +11,7 @@
 ## 1. Mục tiêu
 - **Part A:** Nắm vững lý thuyết về Process & Signal (`SIGTERM`, `SIGKILL`, Zombie Process...). Chạy ngầm tiến trình, bắt PID và điều khiển bằng signal.
 - **Part B:** Đã tạo file systemd unit (`webapp.service`) để daemonize Python HTTP Server và cấu hình tự động hồi sinh.
-- **Part C:** (Chưa làm) - Quản lý permission nâng cao (setgid, setfacl).
+- **Part C:** Đã hoàn thành cấu hình quản lý permission nâng cao (setgid, setfacl) và viết docs tái hiện.
 - **Part D:** (Chưa làm) - Viết script giám sát tài nguyên (CPU/MEM) qua systemd.
 
 ## 2. Cách chạy
@@ -51,6 +51,12 @@ sudo systemctl enable --now webapp
 
 **Ảnh minh chứng kết quả chạy và hồi sinh `webapp.service`:**
 ![Kết quả thực hành Part B](screenshots/part-b-result.jpg)
+
+### Part C: Permission Lab
+- Hoàn thành cấu hình phân quyền nâng cao trên thư mục `/tmp/shared-lab`.
+- Đã thiết lập thành công **setgid** để kế thừa group `devops`.
+- Đã cấu hình **ACL (setfacl)** cho phép cấp quyền read-only.
+- Chi tiết các bước thiết lập, giải thích và ảnh minh chứng lệnh tại: [`permissions-lab.md`](./permissions-lab.md)
 
 ## 4. Khó khăn & cách giải quyết
 - **Vấn đề:** Dễ nhầm lẫn giữa chức năng của `nohup`, `&`, `disown` và `setsid` khi muốn giữ tiến trình chạy ngầm.
