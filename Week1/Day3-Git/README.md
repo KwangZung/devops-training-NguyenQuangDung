@@ -13,6 +13,48 @@ Thực hành và làm chủ các thao tác Git nâng cao: rebase interactive, ch
 - Toàn bộ thao tác thực hành (Part A, B, C) được lưu lịch sử tại repository: **[git-lab](https://github.com/yungn/git-lab)**.
 - Các báo cáo chi tiết (`history.md`, `reflog-lab.md`, `bisect.log`, `workflow-comparison.md`) được đính kèm cùng cấp với file README này.
 
+### Cách thực hiện Part C — git bisect
+1. Tạo nhánh `bug-hunt` gồm 20 commit, trong đó file `app.py` từ commit thứ 13 trở đi sẽ bị in dòng lỗi "ERROR: BUG INTRODUCED!".
+Sử dụng script Bash sau để tự động sinh 20 commit (chạy trong thư mục `git-lab`):
+```bash
+git checkout main
+git checkout -b bug-hunt
+for i in {1..20}; do
+  if [ $i -lt 13 ]; then
+    echo "print('App is working perfectly - Version $i')" > app.py
+  else
+    echo "print('ERROR: BUG INTRODUCED! - Version $i')" > app.py
+  fi
+  git add app.py
+  git commit -m "Update app.py to version $i"
+done
+```
+
+![Tạo nhánh bug-hunt](screenshots/pC-create-bug-hunt.jpg)
+
+2. Dùng la bàn tìm kiếm nhị phân để dò:
+```bash
+git bisect start
+git bisect bad          # Đánh dấu commit hiện tại (20) là lỗi
+git bisect good HEAD~19 # Đánh dấu commit đầu tiên (1) là tốt
+
+# Git nhảy đến version ở giữa
+cat app.py # In ra để tìm bug
+# - Nếu báo "App is working perfectly", nhập:
+git bisect good
+# - Nếu báo "ERROR: BUG INTRODUCED!", nhập:
+git bisect bad
+# Lặp lại quá trình trên cho đến khi Git thông báo "the first bad commit".
+```
+
+![Kết quả git bisect](screenshots/pC-bisect-finished.jpg)
+
+3. Xuất kết quả ra file `bisect.log` và dọn dẹp:
+```bash
+git bisect log > bisect.log
+git bisect reset
+```
+
 ## 3. Kết quả
 - Thực hiện đầy đủ các nhánh yêu cầu trong `git-lab` với lịch sử (history) sạch.
 - Resolve conflict thành công trong Part A.
