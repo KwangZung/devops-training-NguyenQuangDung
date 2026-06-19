@@ -3,15 +3,20 @@
 - **Intern**: Nguyễn Quang Dũng
 - **Phase / Week / Day**: Phase 1 / Week 1 / Day 3
 - **Branch**: `phase-1/week-1/day-3-git`
-- **Submitted at**: `2026-06-19 10:40am` (timezone +07)
+- **Submitted at**: `2026-06-19 05:35` (timezone +07)
 - **Time spent**: `4h`
 
 ## 1. Mục tiêu
 Thực hành và làm chủ các thao tác Git nâng cao: rebase interactive, cherry-pick, resolve conflict, phục hồi commit bằng `reflog`, dò tìm commit lỗi tự động bằng `bisect`, cài đặt `pre-commit` hook. Ngoài ra, cần phân tích và so sánh các mô hình làm việc (workflow) phổ biến: Trunk-based, GitFlow, GitHub Flow.
 
-## 2. Cách chạy
-- Toàn bộ thao tác thực hành (Part A, B, C) được lưu lịch sử tại repository: **[git-lab](https://github.com/KwangZung/git-lab)**.
-- Các báo cáo chi tiết (`history.md`, `reflog-lab.md`, `bisect.log`, `workflow-comparison.md`) được đính kèm cùng cấp với file README này.
+## 2. Chi tiết thực hiện các yêu cầu (Hands-on)
+- Toàn bộ thao tác thực hành (từ Part A đến E) được lưu lịch sử tại repository: **[git-lab](https://github.com/KwangZung/git-lab.git)**.
+
+### Part A — Rebase + cherry-pick + conflict
+Chi tiết các câu lệnh và ảnh chụp đồ thị git được ghi chép tại:**[history.md](./history.md)**.
+
+### Part B — Tìm lại commit bị "mất"
+Cách khôi phục commit bằng reflog được ghi chép tại:**[reflog-lab.md](./reflog-lab.md)**.
 
 ### Cách thực hiện Part C — git bisect
 1. Tạo nhánh `bug-hunt` gồm 20 commit, trong đó file `app.py` từ commit thứ 13 trở đi sẽ bị in dòng lỗi "ERROR: BUG INTRODUCED!".
@@ -58,7 +63,7 @@ git bisect reset
 ### Cách thực hiện Part D — Pre-commit hook
 1. Cài đặt phần mềm `pre-commit`:
 ```bash
-pip install pre-commit
+sudo apt install pre-commit
 ```
 2. Tạo file cấu hình `.pre-commit-config.yaml` ở thư mục gốc của repo `git-lab` bằng dòng lệnh:
 ```bash
@@ -94,6 +99,11 @@ git commit -m "Test pre-commit"
 # Trong lần chạy đầu, phải đợi khoảng 1 phút để pre-commit tải các tool về
 ```
 ![Kết quả pre-commit hook](screenshots/pD-precommit.jpg)
+
+### Part E — So sánh workflow (Trunk-based, GitFlow, GitHub Flow)
+Bảng phân tích, so sánh chi tiết và đánh giá cá nhân được viết tại: **[workflow-comparison.md](./workflow-comparison.md)**.
+
+*(Transcript kết quả chạy lệnh của Part C nằm ở file: **[bisect.log](./bisect.log)**)*
 
 ## 3. Kết quả
 - Thực hiện đầy đủ các nhánh yêu cầu trong `git-lab` với lịch sử (history) sạch.
