@@ -10,7 +10,7 @@
 Thực hành và làm chủ các thao tác Git nâng cao: rebase interactive, cherry-pick, resolve conflict, phục hồi commit bằng `reflog`, dò tìm commit lỗi tự động bằng `bisect`, cài đặt `pre-commit` hook. Ngoài ra, cần phân tích và so sánh các mô hình làm việc (workflow) phổ biến: Trunk-based, GitFlow, GitHub Flow.
 
 ## 2. Cách chạy
-- Toàn bộ thao tác thực hành (Part A, B, C) được lưu lịch sử tại repository: **[git-lab](https://github.com/yungn/git-lab)**.
+- Toàn bộ thao tác thực hành (Part A, B, C) được lưu lịch sử tại repository: **[git-lab](https://github.com/KwangZung/git-lab)**.
 - Các báo cáo chi tiết (`history.md`, `reflog-lab.md`, `bisect.log`, `workflow-comparison.md`) được đính kèm cùng cấp với file README này.
 
 ### Cách thực hiện Part C — git bisect
