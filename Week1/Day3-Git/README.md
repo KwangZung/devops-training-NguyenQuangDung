@@ -55,6 +55,46 @@ git bisect log > bisect.log
 git bisect reset
 ```
 
+### Cách thực hiện Part D — Pre-commit hook
+1. Cài đặt phần mềm `pre-commit`:
+```bash
+pip install pre-commit
+```
+2. Tạo file cấu hình `.pre-commit-config.yaml` ở thư mục gốc của repo `git-lab` bằng dòng lệnh:
+```bash
+touch .pre-commit-config.yaml
+vim .pre-commit-config.yaml
+```
+Nội dung file:
+```yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-added-large-files
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+```
+3. Cài đặt hook vào Git để tự động chạy mỗi khi commit:
+```bash
+pre-commit install
+```
+4. Thử nghiệm:
+```bash
+# Tạo một file và cố tình để thừa vài khoảng trắng ở cuối
+echo "Test trailing whitespace   " > test.txt
+git add test.txt
+git commit -m "Test pre-commit"
+# Commit sẽ bị chặn lại
+# Trong lần chạy đầu, phải đợi khoảng 1 phút để pre-commit tải các tool về
+```
+![Kết quả pre-commit hook](screenshots/pD-precommit.jpg)
+
 ## 3. Kết quả
 - Thực hiện đầy đủ các nhánh yêu cầu trong `git-lab` với lịch sử (history) sạch.
 - Resolve conflict thành công trong Part A.
@@ -64,7 +104,12 @@ git bisect reset
 - Các bằng chứng ảnh chụp (screenshot) và log được đặt đầy đủ trong thư mục `./screenshots/`.
 
 ## 4. Khó khăn & cách giải quyết
-- `<Ghi chú lại những khó khăn gặp phải trong quá trình làm và cách giải quyết>`
+- **Khó khăn:** Khi chạy lệnh `pip install pre-commit`, hệ điều hành (Ubuntu/Debian) báo lỗi `externally-managed-environment` và từ chối cài đặt. Khi cố dùng cờ `--break-system-packages`, hệ thống lại báo lỗi xung đột package mặc định `Cannot uninstall platformdirs... RECORD file not found`.
+- **Cách giải quyết:** Không sử dụng `pip` để cài đặt trực tiếp lên hệ thống (system-wide) để tránh phá vỡ môi trường Python mặc định của OS. Thay vào đó, sử dụng trình quản lý gói của hệ điều hành (`apt`) để cài đặt an toàn:
+  ```bash
+  sudo apt update
+  sudo apt install pre-commit
+  ```
 
 ## 5. Reference
 - [Pro Git book — Ch.3 Branching, Ch.7 Tools](https://git-scm.com/book/en/v2)
