@@ -7,7 +7,7 @@
 - **Intern**: Nguyễn Quang Dũng
 - **Phase / Week / Day**: Phase 1 / Week 1 / Day 4
 - **Branch**: `phase-1/week-1/day-4-networking`
-- **Submitted at**: `2026-19-06 23:00`
+- **Submitted at**: `2026-21-06 21:00`
 - **Time spent**: `5h`
 
 ## 1. Mục tiêu
