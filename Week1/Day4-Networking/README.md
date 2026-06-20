@@ -27,8 +27,10 @@
 - Chi tiết câu trả lời ở các file: `notes.md`, `dns-lab.md`, `tls-lab.md`, `tcpdump-lab.md`.
 
 ## 4. Khó khăn & cách giải quyết
-- (Sẽ cập nhật trong quá trình làm)
-
+- **Lỗi `dig +trace` bị timeout trên môi trường WSL2**: 
+  - **Vấn đề**: Khi chạy lệnh `dig +trace google.com`, lệnh bị lỗi `;; communications error to 10.255.255.254#53: timed out` không thể kết nối tới DNS cục bộ, mặc dù lệnh `ping google.com` vẫn phân giải và chạy bình thường.
+  - **Nguyên nhân**: WSL2 tự động tạo file `/etc/resolv.conf` trỏ về IP của vSwitch ảo nối với máy host Windows (ví dụ `10.255.255.254`). Lệnh `dig` tạo các gói UDP Raw nã trực tiếp vào IP này nhưng cấu hình Firewall/NAT của Windows thường sẽ drop/chặn các gói truy vấn Root Server trực tiếp từ trong môi trường ảo bắn ra. Trong khi đó, `ping` dùng hàm cấp cao của OS nên vẫn lấy được IP.
+  - **Cách giải quyết**: Ép lệnh `dig` đi vòng qua DNS ảo của WSL và truy vấn trực tiếp lên Public DNS ngoài Internet (ví dụ dùng 8.8.8.8 của Google). Cú pháp: `dig @8.8.8.8 +trace google.com`.
 ## 5. Reference
 - **Nguồn tài liệu cho Part A (Lý thuyết cơ bản)**:
   - So sánh OSI/TCP-IP, CIDR, NAT, Proxy: Lấy từ kiến thức mạng căn bản (giáo trình CCNA/Network+) và các quy chuẩn mạng như [RFC 1918 (Private IP)](https://datatracker.ietf.org/doc/html/rfc1918).
