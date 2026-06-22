@@ -45,3 +45,22 @@
 - Giảm thiểu rủi ro bảo mật: Nếu container bị tấn công thông qua một lỗ hổng của ứng dụng, kẻ tấn công sẽ có đặc quyền tối cao bên trong container đó.
 - Ngăn chặn leo thang đặc quyền: Một tiến trình chạy quyền cao nhất có khả năng lợi dụng các lỗ hổng của nhân hệ điều hành để thoát ra khỏi sự cách ly của container và chiếm quyền điều khiển máy chủ thực tế.
 - Việc sử dụng tài khoản giới hạn quyền hạn giúp thu hẹp phạm vi thiệt hại và đảm bảo ứng dụng chỉ có quyền vừa đủ để hoạt động.
+
+---
+
+### Thực hành Part A
+
+**1.**
+```bash
+docker pull nginx:1.27-alpine
+docker history nginx:1.27-alpine
+```
+![Kết quả docker history](./screenshots/part-a-docker-history.png)
+
+**2. Phân tích image bằng công cụ dive**
+```bash
+sudo chmod 666 /var/run/docker.sock
+dive nginx:1.27-alpine
+```
+
+![Kết quả dive](./screenshots/part-a-dive.png)
