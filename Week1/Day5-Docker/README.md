@@ -18,14 +18,56 @@
 
 ## 2. Cách chạy
 
+### Part B — Dockerize 1 web app
+
+**Bước 1: Build Docker Image**
+Chạy lệnh sau tại thư mục chứa Dockerfile:
+```bash
+docker build -t demo-app:1.0.0 .
+```
+
+**Bước 2: Khởi chạy container**
+```bash
+docker run --rm -p 3000:3000 -e NAME=phase1 demo-app:1.0.0
+```
+
+**Bước 3: Kiểm tra dung lượng image**
+```bash
+docker image ls demo-app
+```
+
+**Bước 4: Security Scan bằng Trivy**
+```bash
+docker save -o demo-app.tar demo-app:1.0.0
+trivy image --input demo-app.tar > security-report.txt
+rm demo-app.tar
+```
+
 ## 3. Kết quả
+
+### Part B — Dockerize 1 web app
+
+**1. Kết quả lệnh build thành công**
+![Kết quả build image](./screenshots/part-b-build.png)
+
+**2. Kết quả khởi chạy container và curl**
+![Kết quả run và curl](./screenshots/part-b-run-curl.png)
+
+**3. Kết quả kiểm tra dung lượng image**
+![Kết quả image size](./screenshots/part-b-image-size.png)
+
+**4. Báo cáo Security Scan**
+Kết quả ghi trong file: [security-report.txt](./security-report.txt)
 
 ## 4. Khó khăn và cách giải quyết
 
-- **Vấn đề**: Khi sử dụng công cụ `dive` qua Docker container trên WSL để phân tích image, hệ thống báo lỗi `permission denied while trying to connect to the Docker daemon socket at unix:///var/run/docker.sock`. Ngoài ra, nếu cài `dive` thông qua Snap thì bị lỗi `cannot find docker client executable` do tính năng cách ly.
-- **Nguyên nhân**: Môi trường chạy qua Snap bị giới hạn quyền truy cập không gian thực thi của máy ảo. Đối với việc chạy container `dive`, user mặc định bên trong container không có đủ quyền để truy cập vào socket của Docker (đặc biệt trong trường hợp sử dụng bí danh Podman).
-- **Cách giải quyết**:
-  - Cấp quyền truy cập đọc và ghi cho docker socket bằng lệnh `sudo chmod 666 /var/run/docker.sock` trước khi thực thi container.
+- **Vấn đề với lệnh dive**: Khi sử dụng công cụ `dive` qua Docker container trên WSL để phân tích image, hệ thống báo lỗi `permission denied while trying to connect to the Docker daemon socket`.
+  - **Nguyên nhân**: User mặc định bên trong container không có đủ quyền để truy cập vào socket của Docker, đặc biệt khi hệ thống đang sử dụng Podman thay vì Docker thuần.
+  - **Cách giải quyết**: Cấp quyền truy cập đọc và ghi cho docker socket bằng lệnh `sudo chmod 666 /var/run/docker.sock` trước khi thực thi container.
+
+- **Vấn đề với công cụ quét bảo mật Trivy**: Khi cài đặt Trivy qua phần mềm Snap và quét trực tiếp image, công cụ báo lỗi không tìm thấy Podman socket hoặc không thấy image.
+  - **Nguyên nhân**: Các ứng dụng cài qua Snap bị đưa vào môi trường sandbox rất khắt khe nên không thể truy cập trực tiếp vào socket của hệ thống thật. Ngoài ra đường dẫn socket mặc định của Podman cũng khác Docker khiến công cụ bị nhầm lẫn.
+  - **Cách giải quyết**: Chuyển hướng sang quét gián tiếp. Xuất (save) image ra thành một file nén độc lập (`.tar`), sau đó yêu cầu Trivy quét file đó. Cú pháp: `docker save -o demo-app.tar demo-app:1.0.0` và `trivy image --input demo-app.tar > security-report.txt`.
 ## 5. Tài liệu tham khảo
 - [Docker Documentation](https://docs.docker.com/)
 - [Best practices for writing Dockerfiles](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
