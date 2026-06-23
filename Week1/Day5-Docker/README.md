@@ -43,6 +43,30 @@ trivy image --input demo-app.tar > security-report.txt
 rm demo-app.tar
 ```
 
+### Part D — Push image lên Docker Hub
+
+**Bước 1: Đăng nhập vào Docker Hub**
+```bash
+docker login
+```
+
+**Bước 2: Đổi tên image theo tên đăng nhập Docker Hub**
+```bash
+docker tag demo-app:1.0.0 kazu912/demo-app:1.0.0
+```
+
+**Bước 3: Đẩy image lên kho lưu trữ trực tuyến**
+```bash
+docker push kazu912/demo-app:1.0.0
+```
+
+**Bước 4: Xóa image trên máy và thử pull từ Docker Hub**
+```bash
+# Xóa image local để chắc chắn Docker sẽ phải tải từ trên mạng về
+docker rmi kazu912/demo-app:1.0.0
+docker run --rm -p 3000:3000 -e NAME=phase1 kazu912/demo-app:1.0.0
+```
+
 ## 3. Kết quả
 
 ### Part B — Dockerize 1 web app
@@ -58,6 +82,13 @@ rm demo-app.tar
 
 **4. Báo cáo Security Scan**
 Kết quả ghi trong file: [security-report.txt](./security-report.txt)
+
+### Part D — Push image lên Docker Hub
+
+**1. Kết quả lệnh Push, lệnh run sau khi xóa để kiểm tra pull**
+![Kết quả push image](./screenshots/part-d-push.png)
+
+**2. Link  Image trên Docker Hub**: https://hub.docker.com/r/kazu912/demo-app
 
 ## 4. Khó khăn và cách giải quyết
 
