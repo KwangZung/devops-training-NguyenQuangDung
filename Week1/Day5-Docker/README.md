@@ -37,10 +37,13 @@ docker image ls demo-app
 ```
 
 **Bước 4: Security Scan bằng Trivy**
+*(Lưu ý: Nếu dùng Podman, cần bật dịch vụ API trước để Trivy giao tiếp trực tiếp thay vì phải xuất image ra file `.tar`)*
 ```bash
-docker save -o demo-app.tar demo-app:1.0.0
-trivy image --input demo-app.tar > security-report.txt
-rm demo-app.tar
+# Bật socket giao tiếp cho Podman (chạy ngầm)
+podman system service -t 0 &
+
+# Quét trực tiếp và xuất báo cáo định dạng Markdown qua template
+trivy image --format template --template "@markdown.tpl" -o security-report.md demo-app:1.0.0
 ```
 
 ### Part D — Push image
@@ -70,7 +73,7 @@ docker run --rm -p 3000:3000 -e NAME=phase1 kazu912/demo-app:1.0.0
 ### Part E — Bonus
 
 **So sánh dung lượng các loại Base Image**
-Để thấy sự khác biệt, em build ứng dụng `demo-app` với 4 base image khác nhau.
+Để thấy sự khác biệt, ta sẽ build ứng dụng `demo-app` với 4 base image khác nhau.
 
 
 1. Sửa thành: FROM node:20 AS runtime
@@ -138,7 +141,7 @@ docker image ls | grep demo-app
 ![Kết quả image size](./screenshots/part-b-image-size.png)
 
 **4. Báo cáo Security Scan**
-Kết quả ghi trong file: [security-report.txt](./security-report.txt)
+Kết quả quét dưới định dạng Markdown được đính kèm trong file: [security-report.md](./security-report.md)
 
 ### Part D — Push image
 
@@ -150,7 +153,7 @@ Kết quả ghi trong file: [security-report.txt](./security-report.txt)
 ### Part E — Bonus
 
 **1. Báo cáo Security Scan**
-Đã thực hiện ở part B và lưu kết quả trong file [security-report.txt](./security-report.txt)
+Đã thực hiện bằng công cụ Trivy và ghi nhận kết quả tại file `security-report.md` (Chi tiết chạy lệnh xem ở Part B).
 
 **2. So sánh dung lượng Base Image**
 ![Kết quả so sánh dung lượng](./screenshots/part-e-size-comparison.png)
@@ -161,14 +164,19 @@ Kết quả ghi trong file: [security-report.txt](./security-report.txt)
   - **Nguyên nhân**: User mặc định bên trong container không có đủ quyền để truy cập vào socket của Docker, đặc biệt khi hệ thống đang sử dụng Podman thay vì Docker thuần.
   - **Cách giải quyết**: Cấp quyền truy cập đọc và ghi cho docker socket bằng lệnh `sudo chmod 666 /var/run/docker.sock` trước khi thực thi container.
 
-- **Vấn đề với công cụ quét bảo mật Trivy**: Khi cài đặt Trivy qua phần mềm Snap và quét trực tiếp image, công cụ báo lỗi không tìm thấy Podman socket hoặc không thấy image.
-  - **Nguyên nhân**: Các ứng dụng cài qua Snap bị đưa vào môi trường sandbox rất khắt khe nên không thể truy cập trực tiếp vào socket của hệ thống thật. Ngoài ra đường dẫn socket mặc định của Podman cũng khác Docker khiến công cụ bị nhầm lẫn.
-  - **Cách giải quyết**: Chuyển hướng sang quét gián tiếp. Xuất (save) image ra thành một file nén độc lập (`.tar`), sau đó yêu cầu Trivy quét file đó. Cú pháp: `docker save -o demo-app.tar demo-app:1.0.0` và `trivy image --input demo-app.tar > security-report.txt`.
+- **Vấn đề với công cụ quét bảo mật Trivy trên Podman**: Khi cài Trivy qua Snap và quét trực tiếp, báo lỗi không tìm thấy image hoặc socket.
+  - **Nguyên nhân**:
+    1. Trivy bản Snap bị giới hạn bởi sandbox khắt khe, không được phép chui vào kho image rootless của Podman.
+    2. Podman theo cơ chế không chạy nền (daemonless), nên mặc định không mở cổng API socket, khiến ngay cả Trivy native cũng báo lỗi `no podman socket found`.
+  - **Cách giải quyết triệt để**:
+    1. Gỡ bản Snap (`sudo snap remove trivy`), xóa bộ nhớ đệm lệnh (`hash -r`) và cài đặt bản native từ script chính thức của Aqua Security.
+    2. Chủ động bật dịch vụ API của Podman chạy ngầm bằng lệnh: `podman system service -t 0 &`.
+    3. Tạo file `markdown.tpl` và yêu cầu Trivy quét thẳng image, in ra report dạng markdown theo template: `trivy image --format template --template "@markdown.tpl" -o security-report.md demo-app:1.0.0`.
 
 - **Vấn đề khi build image với Distroless**: Khi đổi base image sang `gcr.io/distroless/nodejs20-debian11`, tiến trình build báo lỗi `stat /bin/sh: no such file or directory` ở dòng `RUN chown`.
   - **Nguyên nhân**: Đặc trưng của Distroless là bị lược bỏ sạch sẽ mọi thành phần hệ điều hành cơ bản (không có shell `/bin/sh`, không có các lệnh core OS như `chown`, `mkdir`, `wget`...). Do đó, các chỉ thị trong Dockerfile gọi lệnh OS (như `RUN`) sẽ thất bại ngay lập tức.
   - **Cách giải quyết**: Phải thiết kế lại cấu trúc Dockerfile ở stage runtime riêng cho Distroless: xóa bỏ lệnh `RUN chown`, xóa bỏ `HEALTHCHECK` (vì không có `wget`), dùng user `nonroot` có sẵn của Distroless, và chỉnh lại `CMD` gọi thẳng file js.
-  
+
 ## 5. Tài liệu tham khảo
 - [Docker Documentation](https://docs.docker.com/)
 - [Best practices for writing Dockerfiles](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
