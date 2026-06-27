@@ -14,6 +14,7 @@
 Thực hành CI/CD nâng cao với GitHub Actions:
 - **Part A:** Sử dụng Matrix strategy để cấu hình job test chạy song song trên nhiều phiên bản Node.js và Ubuntu, đồng thời loại trừ một số tổ hợp cụ thể.
 - **Part B:** Tách workflow ra thành file dùng chung (Reusable workflow) để tái sử dụng logic đóng gói và quét bảo mật.
+- **Part C:** Cấu hình môi trường (Environment) và thiết lập cơ chế duyệt thủ công (Required reviewers) trên giao diện GitHub.
 
 ## 2. Cách chạy
 
@@ -38,6 +39,22 @@ git push origin HEAD
 git add .
 git commit -m "feat(w2d7): add reusable workflow for build job"
 git push origin HEAD
+```
+
+### Part C - Environment + Approval
+```bash
+# 1. Trên giao diện GitHub, vào Settings > Environments.
+# 2. Tạo 2 môi trường: 'staging' và 'production'.
+# 3. Tại môi trường 'production', bật "Required reviewers" và thêm tài khoản cá nhân.
+# 4. Tạo file .github/workflows/deploy.yml với cấu hình triển khai cho 2 môi trường.
+# 5. Commit và push code lên nhánh main.
+git add .
+git commit -m "feat(w2d7): add deploy workflow with environments"
+git push origin HEAD
+
+# 6. Tạo một tag mới để kích hoạt quy trình trên môi trường production
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
 ## 3. Kết quả
@@ -80,6 +97,11 @@ git push origin HEAD
       image_name: demo-app
       image_tag: sha-${{ github.sha }}
 ```
+
+### Part C - Environment + Approval
+- **Screenshot thiết lập Required Reviewers:**
+    ![2 environments](./screenshots/pC-two-environments.png)
+  ![Production Approval](./screenshots/pC-production-approval.png)
 
 ## 4. Khó khăn & cách giải quyết
 - Vấn đề 1 → cách fix.
