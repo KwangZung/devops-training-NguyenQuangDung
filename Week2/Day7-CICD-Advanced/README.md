@@ -15,6 +15,7 @@ Thực hành CI/CD nâng cao với GitHub Actions:
 - **Part A:** Sử dụng Matrix strategy để cấu hình job test chạy song song trên nhiều phiên bản Node.js và Ubuntu, đồng thời loại trừ một số tổ hợp cụ thể.
 - **Part B:** Tách workflow ra thành file dùng chung (Reusable workflow) để tái sử dụng logic đóng gói và quét bảo mật.
 - **Part C:** Cấu hình môi trường (Environment) và thiết lập cơ chế duyệt thủ công (Required reviewers) trên giao diện GitHub.
+- **Part D:** Tự động tạo bản phát hành (GitHub Release) và xuất bản Docker image với tên thẻ (tag) động mỗi khi tạo mốc phiên bản mới.
 
 ## 2. Cách chạy
 
@@ -55,6 +56,20 @@ git push origin HEAD
 # 6. Tạo một tag mới để kích hoạt quy trình trên môi trường production
 git tag v1.0.0
 git push origin v1.0.0
+```
+
+### Part D - Tag-based release
+```bash
+# 1. Tạo file .github/workflows/release.yml thiết lập sự kiện kích hoạt bằng thẻ.
+# 2. Cấu hình để tái sử dụng file ở Part B và bổ sung bước xuất bản sử dụng softprops/action-gh-release.
+# 3. Commit và đẩy cấu hình mới lên repo.
+git add .
+git commit -m "feat(w2d7): add tag-based release workflow"
+git push origin HEAD
+
+# 4. Tạo tag mới và push lên Github (Sẽ tự động kích hoạt cả Part C và Part D)
+git tag v1.0.1
+git push origin v1.0.1
 ```
 
 ## 3. Kết quả
@@ -102,6 +117,35 @@ git push origin v1.0.0
 - **Screenshot thiết lập Required Reviewers:**
     ![2 environments](./screenshots/pC-two-environments.png)
   ![Production Approval](./screenshots/pC-production-approval.png)
+
+### Part D - Tag-based release
+- **Cấu hình tệp `release.yml`:**
+  ```yaml
+  name: Release Application
+  on:
+    push:
+      tags:
+        - 'v*.*.*'
+  permissions:
+    contents: write
+    packages: write
+  jobs:
+    build-release-image:
+      uses: ./.github/workflows/reusable-build.yml
+      with:
+        image_name: demo-app
+        image_tag: ${{ github.ref_name }}
+    create-github-release:
+      needs: build-release-image
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        - uses: softprops/action-gh-release@v2
+          with:
+            generate_release_notes: true
+  ```
+- **Screenshot giao diện GitHub Releases:**
+  ![GitHub Release](./screenshots/pD-release-page.png)
 
 ## 4. Khó khăn & cách giải quyết
 - Vấn đề 1 → cách fix.
