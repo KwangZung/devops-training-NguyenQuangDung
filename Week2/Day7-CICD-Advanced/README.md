@@ -16,6 +16,7 @@ Thực hành CI/CD nâng cao với GitHub Actions:
 - **Part B:** Tách workflow ra thành file dùng chung (Reusable workflow) để tái sử dụng logic đóng gói và quét bảo mật.
 - **Part C:** Cấu hình môi trường (Environment) và thiết lập cơ chế duyệt thủ công (Required reviewers) trên giao diện GitHub.
 - **Part D:** Tự động tạo bản phát hành (GitHub Release) và xuất bản Docker image với tên thẻ (tag) động mỗi khi tạo mốc phiên bản mới.
+- **Part E:** Giải đáp lý thuyết về các kịch bản lỗi, cơ chế bộ nhớ đệm, kỹ thuật gỡ lỗi từ xa bằng tmate và xác thực bảo mật OIDC.
 
 ## 2. Cách chạy
 
@@ -148,15 +149,21 @@ git push origin v1.0.1
   ![GitHub Release](./screenshots/pD-release-page.png)
 
 ## 4. Khó khăn & cách giải quyết
-- Vấn đề 1 → cách fix.
-- Vấn đề 2 → cách fix.
+- None
 
 ## 5. Reference
-- Đã đọc gì để làm task này (link cụ thể, không vague).
+- https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs
+- https://docs.github.com/en/actions/using-workflows/reusing-workflows
+- https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment
+- https://github.com/softprops/action-gh-release
+- https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows
+- https://github.com/mxschmitt/action-tmate
+- https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
+- https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services
 
 ## 6. Self-check
-- [ ] Code chạy được trên máy sạch.
-- [ ] README có hướng dẫn run lại.
-- [ ] Không hard-code secret.
-- [ ] Commit message theo Conventional Commits.
-- [ ] Đã review lại code 1 lượt.
+- [x] Code chạy được trên máy sạch.
+- [x] README có hướng dẫn run lại.
+- [x] Không hard-code secret.
+- [x] Commit message theo Conventional Commits.
+- [x] Đã review lại code 1 lượt.
