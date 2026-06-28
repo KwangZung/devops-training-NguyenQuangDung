@@ -14,17 +14,30 @@
 Tóm tắt yêu cầu task trong 2–3 dòng.
 
 ## 2. Cách chạy
+**Part B: Local-only (Thử nghiệm Terraform căn bản)**
 ```bash
-# Steps để mentor reproduce trên máy mới
-./run.sh
+cd 1-local
+terraform init
+terraform plan
+terraform apply
+# Đổi length = 2 thành 3 trong main.tf
+terraform plan
+terraform apply
+terraform destroy -auto-approve
 ```
 
 ## 3. Kết quả
-- Screenshot / log output (kèm trong `./screenshots/`).
-- Link demo (nếu có).
+**Part B: Local-only**
+- Toàn bộ log hiển thị quá trình chạy đã được lưu tại: [1-local-transcript.log](./1-local/1-local-transcript.log).
+- Ảnh chụp màn hình minh chứng:
+  - ![Terraform Plan](./screenshots/part_b_plan.png)
+  - ![Terraform Apply](./screenshots/part_b_apply.png)
+  Khi thay đổi `length = 2` thành `length = 3`:
+  - ![Terraform Plan Length 3](./screenshots/part_b_length_3_plan.png)
 
 ## 4. Khó khăn & cách giải quyết
-- Vấn đề 1 → cách fix.
+- **Lỗi cài đặt Terraform qua Snap**: Khi chạy lệnh cài đặt Terraform bằng snap trên WSL bị báo lỗi cảnh báo an toàn do thiếu quyền truy cập hệ thống.
+  - Cách khắc phục: Thêm cờ `--classic` vào cuối câu lệnh cài đặt để xác nhận cấp quyền (`sudo snap install terraform --classic`).
 - Vấn đề 2 → cách fix.
 
 ## 5. Reference
