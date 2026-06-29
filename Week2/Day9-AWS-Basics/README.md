@@ -25,7 +25,13 @@ aws --profile test-ro s3 cp test.txt s3://dung-static-5555/
 ```
 
 ### Part C - S3 Static Site
-- Source code giao diện web tĩnh của Part C và Bucket Policy mẫu nằm trong thư mục [s3-static](./s3-static/).
+- Source code giao diện web tĩnh và Bucket Policy mẫu nằm trong thư mục [s3-static](./s3-static/).
+- Các bước thực hiện cấu hình trực tiếp trên giao diện web AWS:
+  1. Tạo S3 Bucket (`dung-static-5555`) và vô hiệu hóa cài đặt **Block Public Access**.
+  2. Kích hoạt tính năng **Static website hosting** trong tab *Properties*, điền `index.html` cho Index document và `error.html` cho Error document.
+  3. Upload các file mã nguồn (từ mục [s3-static](./s3-static/)) lên bucket thông qua tab *Objects*.
+  4. Chỉnh sửa **Bucket Policy** trong tab *Permissions* với nội dung JSON chuẩn nhằm cấp quyền `s3:GetObject` công khai cho mọi truy cập.
+  5. Mở đường dẫn *Bucket website endpoint* được cung cấp ở tab *Properties* trên trình duyệt để kiểm tra web tĩnh.
 
 ## 3. Kết quả
 ### Part B: Lab IAM
@@ -38,8 +44,16 @@ aws --profile test-ro s3 cp test.txt s3://dung-static-5555/
 - Log chạy command dưới Terminal được lưu tại: [iam-lab/transcript.log](./iam-lab/transcript.log).
 
 ### Part C: S3 Static Site
-- Giao diện quản lý Bucket S3 hiển thị thông tin Public:
+- Cấu hình Static Website Hosting:
+![Static Web Hosting](screenshots/pC-static-web-hosting-edited.png)
+- Tải file giao diện lên S3:
+![Files Uploaded](screenshots/pC-files-uploaded.png)
+- Cập nhật Bucket Policy cho phép Public Read:
+![Bucket Policy Applied](screenshots/pC-bucket-policy-applied.png)
+- Trạng thái Bucket hiển thị Public:
 ![Bucket Info](screenshots/pC-bucket-info.png)
+- Truy cập giao diện Web tĩnh qua Endpoint thành công:
+![Web UI](screenshots/pC-web-ui.png)
 
 ## 4. Khó khăn & cách giải quyết
 - Ở phần kiểm tra giới hạn phân quyền tại Part B, do tài khoản AWS hoàn toàn trống (chưa từng tạo bucket nào) nên lệnh đẩy file `s3 cp` trả về lỗi NoSuchBucket (bucket không tồn tại) thay vì AccessDenied (bị từ chối) như yêu cầu của Lab.
