@@ -5,3 +5,4 @@
 !*.tfvars.example
 .terraform.lock.hcl
 aws
+awscliv2.zip
