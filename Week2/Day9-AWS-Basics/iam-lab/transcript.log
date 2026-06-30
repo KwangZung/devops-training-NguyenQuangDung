@@ -1,0 +1,6 @@
+yungn@ThinkBook121024:/mnt/d/JUNIOR/SEMESTER2/Thuc-tap/JITS_INNO_Labs/devops-training-NguyenQuangDung/Week2/Day9-AWS-Basics$ aws --profile test-ro s3 ls
+2026-06-29 16:07:10 dung-static-5555
+
+yungn@ThinkBook121024:/mnt/d/JUNIOR/SEMESTER2/Thuc-tap/JITS_INNO_Labs/devops-training-NguyenQuangDung/Week2/Day9-AWS-Basics/iam-lab$ aws --profile test-ro s3 cp test.txt s3://dung-static-5555/
+
+upload failed: ./test.txt to s3://dung-static-5555/test.txt An error occurred (AccessDenied) when calling the PutObject operation: User: arn:aws:iam::598967424466:user/test-ro is not authorized to perform: s3:PutObject on resource: "arn:aws:s3:::dung-static-5555/test.txt" because no identity-based policy allows the s3:PutObject action
