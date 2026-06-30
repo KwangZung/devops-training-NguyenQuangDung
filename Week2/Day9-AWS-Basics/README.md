@@ -3,8 +3,8 @@
 - **Intern**: `Nguyễn Quang Dũng`
 - **Phase / Week / Day**: `Phase 1 / Week 2 / Day 9`
 - **Branch**: `phase-1/week-2/day-9-aws-basics`
-- **Submitted at**: `2026-06-29`
-- **Time spent**: `3h`
+- **Submitted at**: `2026-06-30`
+- **Time spent**: `6h`
 
 ## 1. Mục tiêu
 Thực hành cấu hình quản lý quyền truy cập trên AWS với IAM (User, Group, Policy, Access Key) và cấu hình Amazon S3 Host Static Website. Nắm vững khái niệm về phân quyền tối thiểu (Least Privilege) và bảo mật Access Key.
@@ -33,6 +33,19 @@ aws --profile test-ro s3 cp test.txt s3://dung-static-5555/
   4. Chỉnh sửa **Bucket Policy** trong tab *Permissions* với nội dung JSON chuẩn nhằm cấp quyền `s3:GetObject` công khai cho mọi truy cập.
   5. Mở đường dẫn *Bucket website endpoint* được cung cấp ở tab *Properties* trên trình duyệt để kiểm tra web tĩnh.
 
+### Part D - Presigned URL
+- Code Python dùng `boto3` nằm trong thư mục [s3-presign](./s3-presign/).
+- Các bước chạy:
+  1. Tạo bucket private (đảm bảo Block Public Access đang BẬT) tên là `private-dung-5555` và tải file PDF `private.pdf` lên S3.
+  2. Tạo Presigned URL có thời hạn 5 phút thông qua AWS CLI:
+     ```bash
+     aws s3 presign s3://private-dung-5555/private.pdf --expires-in 300 --region ap-southeast-1
+     ```
+  3. Chạy script Python `presign.py` để sinh URL tự động bằng code:
+     ```bash
+     python3 s3-presign/presign.py
+     ```
+
 ## 3. Kết quả
 ### Part B: Lab IAM
 - IAM Group `s3-readonly`:
@@ -55,9 +68,23 @@ aws --profile test-ro s3 cp test.txt s3://dung-static-5555/
 - Truy cập giao diện Web tĩnh qua Endpoint thành công:
 ![Web UI](screenshots/pC-web-ui.png)
 
+### Part D: Presigned URL
+- Tải file PDF lên Private Bucket thành công:
+![Private File Uploaded](screenshots/pD-private-file-uploaded.png)
+- Sinh link Presigned qua AWS CLI:
+![Gen Temp Access Link](screenshots/pD-gen-temp-access-link.png)
+- Sinh link Presigned bằng script Python `boto3`:
+![Run presign.py](screenshots/pD-run-presign-py.png)
+- Truy cập thành công thông qua link sinh từ CLI:
+![Access through link](screenshots/pD-access-private-file-through-link.png)
+- Truy cập thành công thông qua link sinh từ Python:
+![Access through Python link](screenshots/pD-access-through-link-gened-by-boto3.png)
+
 ## 4. Khó khăn & cách giải quyết
 - Ở phần kiểm tra giới hạn phân quyền tại Part B, do tài khoản AWS hoàn toàn trống (chưa từng tạo bucket nào) nên lệnh đẩy file `s3 cp` trả về lỗi NoSuchBucket (bucket không tồn tại) thay vì AccessDenied (bị từ chối) như yêu cầu của Lab.
 - **Cách giải quyết:** Triển khai bước tạo Bucket của Part C trước, sau đó tái sử dụng chính Bucket đó để làm bucket mục tiêu kiểm thử trong lệnh tải file ở Part B. Kết quả đã trả về đúng lỗi `AccessDenied`.
+- Ở Part D, khi truy cập vào Presigned URL thì gặp mã lỗi XML `PermanentRedirect`.
+- **Cách giải quyết:** Vấn đề này xảy ra do AWS CLI đang lấy mặc định region `ap-southeast-1` để sinh link nhưng Bucket lại được tạo ở region khác. Cách khắc phục là chèn thêm flag `--region <tên_region_thực_tế>` (ở đây là us-east-1) vào câu lệnh sinh link (hoặc chỉ định đúng tham số `region_name` bên trong code Python) để tương thích chính xác vị trí địa lý.
 
 ## 5. Reference
 - [IAM best practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html)
