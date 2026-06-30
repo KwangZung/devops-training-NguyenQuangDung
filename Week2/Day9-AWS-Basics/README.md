@@ -3,11 +3,14 @@
 - **Intern**: `Nguyễn Quang Dũng`
 - **Phase / Week / Day**: `Phase 1 / Week 2 / Day 9`
 - **Branch**: `phase-1/week-2/day-9-aws-basics`
-- **Submitted at**: `2026-06-30`
+- **Submitted at**: `2026-06-30 10:00`
 - **Time spent**: `6h`
 
 ## 1. Mục tiêu
-Thực hành cấu hình quản lý quyền truy cập trên AWS với IAM (User, Group, Policy, Access Key) và cấu hình Amazon S3 Host Static Website. Nắm vững khái niệm về phân quyền tối thiểu (Least Privilege) và bảo mật Access Key.
+- Hiểu **IAM** (user, group, role, policy, trust policy).
+- Làm chủ S3: bucket policy, static site, presigned URL.
+- Nắm sơ đồ VPC, subnet public/private, NAT, IGW.
+- Biết khái niệm: region, AZ, edge location.
 
 ## 2. Cách chạy
 ### Part A - Lý thuyết
@@ -80,6 +83,18 @@ aws --profile test-ro s3 cp test.txt s3://dung-static-5555/
 - Truy cập thành công thông qua link sinh từ Python:
 ![Access through Python link](screenshots/pD-access-through-link-gened-by-boto3.png)
 
+### Part E: VPC topology
+- Sơ đồ kiến trúc mạng VPC:
+![VPC Topology Diagram](screenshots/pE-mermaid.png)
+
+### Cleanup
+- Tất cả các S3 Buckets đã được empty và delete hoàn toàn:
+![All Buckets Deleted](screenshots/after-all-buckets-deleted.png)
+- Access Key của IAM User đã được xóa vĩnh viễn nhằm đảm bảo bảo mật:
+![IAM Access Key Deleted](screenshots/after-iam-access-key-deleted.png)
+- Kiểm tra chi phí (Billing) đang ở Free Tier:
+![Billing Check](screenshots/after-biling.png)
+
 ## 4. Khó khăn & cách giải quyết
 - Ở phần kiểm tra giới hạn phân quyền tại Part B, do tài khoản AWS hoàn toàn trống (chưa từng tạo bucket nào) nên lệnh đẩy file `s3 cp` trả về lỗi NoSuchBucket (bucket không tồn tại) thay vì AccessDenied (bị từ chối) như yêu cầu của Lab.
 - **Cách giải quyết:** Triển khai bước tạo Bucket của Part C trước, sau đó tái sử dụng chính Bucket đó để làm bucket mục tiêu kiểm thử trong lệnh tải file ở Part B. Kết quả đã trả về đúng lỗi `AccessDenied`.
@@ -87,8 +102,11 @@ aws --profile test-ro s3 cp test.txt s3://dung-static-5555/
 - **Cách giải quyết:** Vấn đề này xảy ra do AWS CLI đang lấy mặc định region `ap-southeast-1` để sinh link nhưng Bucket lại được tạo ở region khác. Cách khắc phục là chèn thêm flag `--region <tên_region_thực_tế>` (ở đây là us-east-1) vào câu lệnh sinh link (hoặc chỉ định đúng tham số `region_name` bên trong code Python) để tương thích chính xác vị trí địa lý.
 
 ## 5. Reference
-- [IAM best practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html)
-- Hướng dẫn cấu hình S3 Static Website Hosting.
+- [AWS Free Tier dos & don'ts](https://aws.amazon.com/free/)
+- [IAM Best Practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html)
+- [Hosting a static website using Amazon S3](https://docs.aws.amazon.com/AmazonS3/latest/userguide/WebsiteHosting.html) 
+- [Boto3 S3 Presigned URLs](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/s3-presigned-urls.html) 
+- [Amazon VPC fundamentals](https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html)
 
 ## 6. Self-check
 - [x] Code chạy được trên máy sạch.
