@@ -59,14 +59,20 @@ docker compose up -d
 - **Vấn đề 3:** Trình duyệt hiển thị trang web rác từ nhiều tháng trước ở cổng 3000 thay vì hiển thị Grafana.
   - **Cách giải quyết:** Nguyên nhân do cơ chế nhớ đệm Service Worker của trình duyệt chặn yêu cầu. Đã khắc phục bằng cách truy cập thông qua thẻ Ẩn danh (Incognito) hoặc xóa sạch bộ nhớ đệm.
 - **Vấn đề 4:** Không tìm thấy nút xuất tệp tin (Export/Share) trên thanh công cụ của Grafana.
-  - **Cách giải quyết:** Do bảng điều khiển đang ở trạng thái nháp (chưa được lưu). Đã áp dụng cách xử lý dự phòng bằng cách vào phần Cài đặt (Settings) -> JSON Model để sao chép trực tiếp mã nguồn thô của bảng điều khiển.
+  - **Cách giải quyết:** Do bảng điều khiển đang ở trạng thái nháp (chưa được lưu). Đã áp dụng cách xử lý vào phần Cài đặt (Settings) -> JSON Model để sao chép trực tiếp mã nguồn thô của bảng điều khiển.
 
 ## 5. Reference
-- Đã đọc gì để làm task này (link cụ thể, không vague).
+- [Docker Compose Documentation](https://docs.docker.com/compose/)
+- [Prometheus Documentation](https://prometheus.io/docs/introduction/overview/)
+- [Node Exporter Metrics](https://github.com/prometheus/node_exporter)
+- [Blackbox Exporter](https://github.com/prometheus/blackbox_exporter)
+- [Grafana Documentation](https://grafana.com/docs/grafana/latest/)
+- [PromQL Basics](https://prometheus.io/docs/prometheus/latest/querying/basics/)
+- [Google SRE Book: Service Level Objectives](https://sre.google/sre-book/service-level-objectives/)
 
 ## 6. Self-check
-- [ ] Code chạy được trên máy sạch.
-- [ ] README có hướng dẫn run lại.
-- [ ] Không hard-code secret.
-- [ ] Commit message theo Conventional Commits.
-- [ ] Đã review lại code 1 lượt.
+- [x] Code chạy được trên máy sạch.
+- [x] README có hướng dẫn run lại.
+- [x] Không hard-code secret.
+- [x] Commit message theo Conventional Commits.
+- [x] Đã review lại code 1 lượt.
