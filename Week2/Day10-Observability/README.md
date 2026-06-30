@@ -17,18 +17,30 @@
 - Biết khái niệm SLO / SLI / Error Budget.
 
 ## 2. Cách chạy
+### Part B: Stack docker-compose
+- Mở terminal tại thư mục bài tập và khởi chạy mạng lưới giám sát bằng lệnh:
 ```bash
-# Steps để mentor reproduce trên máy mới
-./run.sh
+docker compose up -d
 ```
+- Truy cập vào giao diện Grafana tại địa chỉ: `http://localhost:3000` với tài khoản mặc định `admin`/`admin`.
 
 ## 3. Kết quả
-- Screenshot / log output (kèm trong `./screenshots/`).
-- Link demo (nếu có).
+### Part B: Stack docker-compose
+- Khởi động thành công 4 bộ chứa Docker gồm: Prometheus, Grafana, Node Exporter, và Blackbox Exporter.
+- Đã liên kết nguồn dữ liệu Prometheus vào Grafana thông qua URL nội bộ `http://prometheus:9090`.
+- Đã thiết kế bảng điều khiển với 4 biểu đồ: Mức sử dụng CPU, RAM, ổ cứng và độ trễ trang web.
+- Tệp tin xuất ra của bảng điều khiển được lưu tại `dashboards/host.json`.
+- Các ảnh screenshots:
+  - ![Giao diện Grafana](./screenshots/pB-grafana-at-port-3000.png)
+  - ![Danh sách Docker](./screenshots/pB-docker-compose.png)
 
 ## 4. Khó khăn & cách giải quyết
-- Vấn đề 1 → cách fix.
-- Vấn đề 2 → cách fix.
+- **Vấn đề 1:** Lỗi không tải được ảnh `prom/prometheus:v2.55`. 
+  - **Cách giải quyết:** Phát hiện tài liệu viết thiếu phiên bản vá lỗi, đã sửa lại thành `v2.55.0` cho khớp với kho lưu trữ Docker Hub.
+- **Vấn đề 2:** Lỗi không truy cập được Grafana sau khi đổi cổng.
+  - **Cách giải quyết:** Do sử dụng sai cơ chế ánh xạ cổng (`3001:3001` thay vì `3001:3000`), sau đó đã chỉnh lại thành `3000:3000` vì cổng 3000 hoàn toàn rảnh rỗi.
+- **Vấn đề 3:** Trình duyệt hiển thị trang web rác từ nhiều tháng trước ở cổng 3000 thay vì hiển thị Grafana.
+  - **Cách giải quyết:** Nguyên nhân do cơ chế nhớ đệm Service Worker của trình duyệt chặn yêu cầu. Đã khắc phục bằng cách truy cập thông qua thẻ Ẩn danh (Incognito) hoặc xóa sạch bộ nhớ đệm.
 
 ## 5. Reference
 - Đã đọc gì để làm task này (link cụ thể, không vague).
