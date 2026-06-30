@@ -24,6 +24,15 @@ docker compose up -d
 ```
 - Truy cập vào giao diện Grafana tại địa chỉ: `http://localhost:3000` với tài khoản mặc định `admin`/`admin`.
 
+### Part C: Grafana Dashboard
+- Đăng nhập vào Grafana, chọn **Connections** -> **Data sources** -> **Prometheus** và nhập URL `http://prometheus:9090`, sau đó nhấn **Save & test**.
+- Tạo một Dashboard mới và vẽ 4 biểu đồ (Panel) bằng các câu lệnh truy vấn PromQL sau:
+  - **Mức sử dụng CPU:** `100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)`
+  - **Mức sử dụng RAM:** `100 * (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes))`
+  - **Tỷ lệ ổ cứng còn trống:** `100 * (node_filesystem_free_bytes{fstype=~"ext4|xfs"} / node_filesystem_size_bytes{fstype=~"ext4|xfs"})`
+  - **Sức khỏe trang web:** Sử dụng đồng thời hai câu lệnh `probe_duration_seconds` (đo độ trễ) và `probe_success` (trạng thái phản hồi).
+- Nhấn nút **Settings** -> chọn **JSON Model** -> Sao chép toàn bộ mã nguồn -> Tạo tệp `dashboards/host.json` và dán toàn bộ mã vào.
+
 ## 3. Kết quả
 ### Part B: Stack docker-compose
 - Khởi động thành công 4 bộ chứa Docker gồm: Prometheus, Grafana, Node Exporter, và Blackbox Exporter.
@@ -34,6 +43,14 @@ docker compose up -d
   - ![Giao diện Grafana](./screenshots/pB-grafana-at-port-3000.png)
   - ![Danh sách Docker](./screenshots/pB-docker-compose.png)
 
+### Part C: Grafana Dashboard
+- Đã kết nối thành công nguồn dữ liệu Prometheus vào Grafana.
+- Đã vẽ thành công bảng điều khiển chứa 4 biểu đồ giám sát kỹ thuật theo đúng yêu cầu bài toán.
+- Đã xuất thành công tệp cấu hình của bảng điều khiển bằng phương pháp dự phòng JSON Model và lưu tại `dashboards/host.json`.
+- Các ảnh screenshots:
+  - ![Cấu hình thành công Prometheus](./screenshots/pC-prometheus-save-and-test-success.png)
+  - ![Giao diện 4 biểu đồ](./screenshots/pC-dashboard-4-panels.png)
+
 ## 4. Khó khăn & cách giải quyết
 - **Vấn đề 1:** Lỗi không tải được ảnh `prom/prometheus:v2.55`. 
   - **Cách giải quyết:** Phát hiện tài liệu viết thiếu phiên bản vá lỗi, đã sửa lại thành `v2.55.0` cho khớp với kho lưu trữ Docker Hub.
@@ -41,6 +58,8 @@ docker compose up -d
   - **Cách giải quyết:** Do sử dụng sai cơ chế ánh xạ cổng (`3001:3001` thay vì `3001:3000`), sau đó đã chỉnh lại thành `3000:3000` vì cổng 3000 hoàn toàn rảnh rỗi.
 - **Vấn đề 3:** Trình duyệt hiển thị trang web rác từ nhiều tháng trước ở cổng 3000 thay vì hiển thị Grafana.
   - **Cách giải quyết:** Nguyên nhân do cơ chế nhớ đệm Service Worker của trình duyệt chặn yêu cầu. Đã khắc phục bằng cách truy cập thông qua thẻ Ẩn danh (Incognito) hoặc xóa sạch bộ nhớ đệm.
+- **Vấn đề 4:** Không tìm thấy nút xuất tệp tin (Export/Share) trên thanh công cụ của Grafana.
+  - **Cách giải quyết:** Do bảng điều khiển đang ở trạng thái nháp (chưa được lưu). Đã áp dụng cách xử lý dự phòng bằng cách vào phần Cài đặt (Settings) -> JSON Model để sao chép trực tiếp mã nguồn thô của bảng điều khiển.
 
 ## 5. Reference
 - Đã đọc gì để làm task này (link cụ thể, không vague).
