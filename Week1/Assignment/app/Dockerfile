@@ -2,7 +2,7 @@
 FROM node:18-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 COPY src/ ./src/
 
 # Giai đoạn 2: Lắp ráp bản chạy chính thức
