@@ -26,6 +26,12 @@ docker build -t exam-app:dev .
 cp .env.example .env
 docker compose up -d
 curl http://localhost:8080/healthz
+
+# Task 4: Khởi tạo và triển khai hạ tầng
+cd terraform
+terraform init
+terraform apply -auto-approve
+terraform destroy -auto-approve
 ```
 
 ## 3. Kết quả
@@ -75,11 +81,29 @@ Mã nguồn ứng dụng được lưu tại repo:
 
 ![Kết quả CI Pipeline](./screenshots/task3-pipeline-success.png)
 
+### Task 4: IaC nhỏ
+**Cách thực hiện:**
+- Thiết lập tệp cấu hình `main.tf` tích hợp các khối nhà cung cấp `local` và `random`.
+- Ứng dụng tài nguyên `random_string` để sinh chuỗi định danh ngẫu nhiên gắn vào tệp.
+- Khởi tạo tệp tin giả lập đối tượng phát hành (release artifact) thông qua tài nguyên `local_file`, đảm bảo khả năng thực thi độc lập tại môi trường cục bộ thay thế cho kho lưu trữ đám mây.
+- Cập nhật tệp `.gitignore` loại trừ hoàn toàn các tập tin trạng thái cục bộ nhạy cảm (như thư mục `.terraform`, `.tfstate`) nhằm kiểm soát nghiêm ngặt tính bảo mật.
+
+**Kết quả đạt được:**
+- `terraform init` và `terraform apply`
+![Khởi tạo Terraform](./screenshots/task4-terraform-init.png)
+![Triển khai Terraform](./screenshots/task4-terraform-apply.png)
+
+- `terraform destroy`
+
+![Kết quả Terraform Destroy](./screenshots/task4-terraform-destroy.png)
+
 ## 4. Khó khăn & cách giải quyết
 - **Lỗi thiếu tệp khóa bộ nhớ đệm (Cache) trong CI:** Quá trình tự động cài đặt môi trường Node.js trên GitHub Actions thất bại do hệ thống không tìm thấy tệp `package-lock.json` để làm khóa lưu trữ bộ đệm.
   → *Cách giải quyết:* Thực thi lệnh `npm install` tại môi trường cục bộ để tạo tệp `package-lock.json` và bổ sung vào hệ thống quản lý phiên bản.
 - **Lỗi không hỗ trợ xuất bộ đệm Docker (Cache export):** Kịch bản đóng gói báo lỗi do trình điều khiển mặc định của hệ thống Docker trên GitHub Runner không hỗ trợ tính năng xuất bộ đệm (`type=gha`).
   → *Cách giải quyết:* Bổ sung hành động `docker/setup-buildx-action` trước bước thực thi bản dựng nhằm kích hoạt trình điều khiển `docker-container`, hỗ trợ đầy đủ tính năng lưu trữ tiên tiến.
+- **Lỗi bảo mật khi cài đặt Terraform qua Snap:** Hệ thống máy chủ từ chối cài đặt gói phân phối của Terraform do yêu cầu quyền truy cập sâu hệ thống (classic confinement), vi phạm chính sách ranh giới an toàn (sandbox) mặc định.
+  → *Cách giải quyết:* Bổ sung tham số `--classic` vào lệnh cài đặt (`sudo snap install terraform --classic`) để cho phép thực thi ở đặc quyền mở rộng.
 
 ## 5. Reference
 - Đã đọc gì để làm task này (link cụ thể, không vague).
