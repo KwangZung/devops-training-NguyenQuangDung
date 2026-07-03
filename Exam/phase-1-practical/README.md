@@ -21,6 +21,11 @@ cd phase-1-exam-practical
 
 # Task 1: Kiểm tra bản dựng Docker
 docker build -t exam-app:dev .
+
+# Task 2: Khởi động hệ thống và kiểm tra trạng thái
+cp .env.example .env
+docker compose up -d
+curl http://localhost:8080/healthz
 ```
 
 ## 3. Kết quả
@@ -38,6 +43,21 @@ Mã nguồn ứng dụng được lưu tại repo:
 **Kết quả đạt được:**
 
 ![Kết quả lệnh build Task 1](./screenshots/task1-docker-build-t-exam-app-dev.png)
+
+### Task 2: docker-compose 2 service 
+**Cách thực hiện:**
+- Khai báo tệp tin `.env.example` cung cấp định dạng chuẩn cho các biến môi trường cấu hình cơ sở dữ liệu.
+- Copy `.env` từ `.env.example`
+- Xây dựng cấu hình `docker-compose.yml` định nghĩa hai dịch vụ cốt lõi: ứng dụng `app` và cơ sở dữ liệu `postgres`. 
+- Cấu hình chỉ thị `depends_on` với điều kiện `service_healthy`, yêu cầu dịch vụ ứng dụng đợi cơ sở dữ liệu hoạt động ổn định trước khi khởi tạo.
+- Cấu hình liên kết volume cho dịch vụ `postgres` để đảm bảo dữ liệu bền vững.
+
+**Kết quả đạt được:**
+- Hệ thống đa dịch vụ khởi chạy hoàn tất.
+- Điểm kiểm tra phản hồi thành công mã trạng thái `HTTP 200 OK`.
+
+![Khởi động Docker Compose](./screenshots/task2-docker-compose-up.png)
+![Kết quả Healthcheck](./screenshots/task2-curl-healthz-200.png)
 
 ## 4. Khó khăn & cách giải quyết
 - Vấn đề 1 → cách fix.
