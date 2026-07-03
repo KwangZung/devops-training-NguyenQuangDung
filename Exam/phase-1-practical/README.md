@@ -59,9 +59,27 @@ Mã nguồn ứng dụng được lưu tại repo:
 ![Khởi động Docker Compose](./screenshots/task2-docker-compose-up.png)
 ![Kết quả Healthcheck](./screenshots/task2-curl-healthz-200.png)
 
+### Task 3: Tự động hóa CI Pipeline
+**Cách thực hiện:**
+- Thiết lập tệp cấu hình `.github/workflows/ci.yml` định nghĩa quy trình tích hợp liên tục.
+- Phân chia quy trình thành 3 luồng công việc độc lập: `lint`, `test`, và `build-and-push`, liên kết tuần tự thông qua chỉ thị `needs`.
+- Cấu hình kích hoạt trên toàn bộ các nhánh (mọi sự kiện push) nhằm kiểm soát chất lượng mã nguồn, tuy nhiên giới hạn thao tác đẩy ảnh lên kho lưu trữ (push GHCR) chỉ áp dụng cho nhánh `main`.
+- Cấu hình bước xác thực tài khoản với GitHub Container Registry tự động qua mã thông báo `GITHUB_TOKEN`.
+- Thiết lập trích xuất mã định danh tự động (`sha-<short>` và `latest`) thông qua hành động `docker/metadata-action`.
+- Tích hợp bộ nhớ đệm đa lớp (NPM cache và Docker cache backend) tối ưu hóa thời gian thực thi.
+- Khắc phục các rào cản nền tảng thông qua việc khởi tạo tệp `package-lock.json` và cấu hình môi trường hỗ trợ `docker-container` driver thông qua `setup-buildx-action`.
+
+**Kết quả đạt được:**
+- Kịch bản CI thực thi thành công toàn bộ các luồng.
+- File image được tự động đóng gói và đẩy lên repo.
+
+![Kết quả CI Pipeline](./screenshots/task3-pipeline-success.png)
+
 ## 4. Khó khăn & cách giải quyết
-- Vấn đề 1 → cách fix.
-- Vấn đề 2 → cách fix.
+- **Lỗi thiếu tệp khóa bộ nhớ đệm (Cache) trong CI:** Quá trình tự động cài đặt môi trường Node.js trên GitHub Actions thất bại do hệ thống không tìm thấy tệp `package-lock.json` để làm khóa lưu trữ bộ đệm.
+  → *Cách giải quyết:* Thực thi lệnh `npm install` tại môi trường cục bộ để tạo tệp `package-lock.json` và bổ sung vào hệ thống quản lý phiên bản.
+- **Lỗi không hỗ trợ xuất bộ đệm Docker (Cache export):** Kịch bản đóng gói báo lỗi do trình điều khiển mặc định của hệ thống Docker trên GitHub Runner không hỗ trợ tính năng xuất bộ đệm (`type=gha`).
+  → *Cách giải quyết:* Bổ sung hành động `docker/setup-buildx-action` trước bước thực thi bản dựng nhằm kích hoạt trình điều khiển `docker-container`, hỗ trợ đầy đủ tính năng lưu trữ tiên tiến.
 
 ## 5. Reference
 - Đã đọc gì để làm task này (link cụ thể, không vague).
