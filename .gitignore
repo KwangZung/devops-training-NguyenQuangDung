@@ -6,3 +6,5 @@
 .terraform.lock.hcl
 aws
 awscliv2.zip
+.env
+certs
