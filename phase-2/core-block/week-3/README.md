@@ -6,7 +6,7 @@
 
 - **Intern**: `Nguyễn Quang Dũng`
 - **Phase / Week / Day**: `Phase 2 / Week 3 / Day 3`
-- **Branch**: `phase-2/week-3-kubernetes`
+- **Branch**: `phase-2/week-3/day-3`
 - **Submitted at**: `2026-07-07 22:09` (timezone +07)
 - **Time spent**: `6h`
 
