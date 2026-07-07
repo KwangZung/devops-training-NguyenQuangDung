@@ -43,20 +43,76 @@ kubectl get pods,svc
 ```
 
 ### Day 2: Deployment, Service, Ingress
-Thay vì gõ từng lệnh thủ công (Imperative), toàn bộ quy trình thực hành đã được chuẩn hóa theo tài liệu gốc của Kubernetes (Khai báo YAML - Declarative) và đóng gói vào các Bash Script. Chỉ cần chạy các tệp tin này để tự động hóa toàn bộ quá trình khởi tạo cấu hình và áp dụng vào Cluster:
-
+#### Lab 2: Deployment + Rolling Update
 ```bash
-# 1. Cấp quyền thực thi cho các tệp lệnh
-chmod +x deployment.sh service.sh ingress.sh
+# - Deploy `demo-app:v1` (3 replica).
+kubectl create deployment demo-app --image=nginx:1.24 --replicas=3
+kubectl get pods
+# - Rolling update lên `v2`.
+kubectl set image deployment/demo-app nginx=nginx:1.25
+# - Theo dõi `kubectl rollout status`.
+kubectl rollout status deployment/demo-app
+# - Rollback.
+kubectl rollout undo deployment/demo-app
+```
 
-# 2. Deployment (Khởi tạo, Rolling Update và Rollback)
-./deployment.sh
+#### Lab 3: Ingress
+```bash
+# Bọc Service cho Deployment để Ingress có thể trỏ vào
+kubectl expose deployment demo-app --port=80 --target-port=80
 
-# 3. Service (Thiết lập mạng nội bộ liên kết các Pod)
-./service.sh
+# - Tạo Ingress route `app.local → demo-app:80`.
+cat <<EOF | kubectl apply -f -
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demo-ingress
+spec:
+  rules:
+  - host: app.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: demo-app
+            port:
+              number: 80
+EOF
 
-# 4. Ingress (Tạo quy tắc định tuyến mạng)
-./ingress.sh
+# Phân giải tên miền ảo trên máy Host
+echo "127.0.0.1 app.local" | sudo tee -a /etc/hosts
+curl http://app.local:8080
+
+# - TLS termination với cert tự sinh hoặc cert-manager + selfsigned ClusterIssuer.
+# Tạo chứng chỉ SSL tự sinh (Self-signed) cho tên miền app.local và lưu vào Secret
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=app.local"
+kubectl create secret tls demo-app-tls --key tls.key --cert tls.crt
+
+# Cập nhật Ingress để áp dụng chứng chỉ bảo mật (TLS Termination)
+cat <<EOF | kubectl apply -f -
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demo-ingress
+spec:
+  tls:
+  - hosts:
+    - app.local
+    secretName: demo-app-tls
+  rules:
+  - host: app.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: demo-app
+            port:
+              number: 80
+EOF
 ```
 
 ## 3. Kết quả
