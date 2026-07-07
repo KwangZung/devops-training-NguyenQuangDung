@@ -32,3 +32,27 @@ Pod là đơn vị tính toán nhỏ nhất và cơ bản nhất có thể đư�
 - **Tiếp nhận yêu cầu**: Khi người dùng phát lệnh triển khai thông qua Terminal, một yêu cầu kèm theo bản phác thảo cấu hình của Pod sẽ được gửi đến API Server. Hệ thống kiểm tra quyền truy cập, xác nhận tính hợp lệ của cấu hình trước khi ghi nhận trạng thái mong muốn mới này vào etcd.
 - **Lập lịch phân bổ**: Scheduler liên tục phát hiện các Pod mới đã được lưu lại nhưng chưa được gắn với bất kỳ Node nào. Nó tiến hành phân tích yêu cầu phần cứng của Pod, lọc bỏ các Node không thỏa mãn điều kiện và chấm điểm những ứng viên còn lại. Khi chọn được vị trí tối ưu, Scheduler cập nhật lại thông tin này cho API Server.
 - **Thực thi vòng đời**: Tác nhân Kubelet trên Node được chọn phát hiện ra có một nhiệm vụ mới được giao. Nó lập tức thông báo cho Container Runtime tải Image ứng dụng từ Registry, thiết lập các giới hạn tài nguyên và cấu hình CNI. Sau khi Container bắt đầu chạy thành công, Kubelet liên tục theo dõi và phản hồi trạng thái hoạt động trở lại cho API Server để hoàn thiện toàn bộ vòng đời triển khai Pod.
+
+---
+
+# Báo cáo Lý thuyết Day 2 - Deployment, Service, Ingress
+
+## 1. Deployment: Quản lý vòng đời ứng dụng
+Trong thực tế, việc quản lý các Pod độc lập là không hiệu quả vì bản thân Pod không có khả năng self-healing nếu Node chứa nó gặp sự cố. Tài nguyên Deployment ra đời để giải quyết bài toán này.
+- **Vai trò**: Deployment là một tài nguyên cấp cao, quản lý trực tiếp các tập hợp bản sao (ReplicaSet). Nó định nghĩa trạng thái mong muốn của ứng dụng (ví dụ: số lượng bản sao, phiên bản Image cần chạy) và đảm bảo trạng thái thực tế trên Cluster luôn khớp với cấu hình đó.
+- **Cơ chế cập nhật không gián đoạn (Rolling Update)**: Khi người quản trị thay đổi phiên bản Image, Deployment không tắt toàn bộ hệ thống cũ ngay lập tức. Thay vào đó, nó khởi tạo dần dần các Pod mới và lần lượt loại bỏ các Pod cũ. Nhờ vậy, dịch vụ không bị gián đoạn (zero downtime) trong suốt quá trình nâng cấp.
+- **Cơ chế rollback**: Deployment lưu lại lịch sử các lần cập nhật thông qua các cấu hình cũ. Nếu phiên bản mới hoạt động không như mong muốn, người quản trị có thể dễ dàng ra lệnh rollback hệ thống về trạng thái ổn định trước đó với thao tác qua Terminal.
+
+## 2. Service: Kết nối và cân bằng tải nội bộ
+Do các Pod mang tính chất tạm thời, địa chỉ mạng của chúng có thể thay đổi bất cứ lúc nào (khi Pod bị chết và được tự động tạo lại). Service cung cấp một điểm truy cập mạng duy nhất, cố định cho một nhóm các Pod đang thực hiện cùng một chức năng.
+- **Cơ chế tự động khám phá (Label Selector)**: Service không quản lý trực tiếp danh sách địa chỉ của Pod. Nó sử dụng cơ chế gán nhãn (labels) để tự động phát hiện và liên kết lưu lượng mạng tới tất cả các Pod khớp với điều kiện tìm kiếm. Khi số lượng Pod tăng hoặc giảm, Service tự động cập nhật danh sách đích đến.
+- **Phân loại Service cơ bản**:
+  - `ClusterIP`: Cấp phát một địa chỉ mạng nội bộ. Dịch vụ chỉ có thể được truy cập từ bên trong Cluster, phù hợp cho kết nối nội bộ giữa ứng dụng và database.
+  - `NodePort`: Mở một Port cố định trên tất cả các Node. Việc truy cập vào địa chỉ mạng của bất kỳ Node nào qua Port này đều sẽ được định tuyến thẳng đến Service.
+  - `LoadBalancer`: Tích hợp chặt chẽ với các nền tảng điện toán đám mây để tự động cấp phát một bộ cân bằng tải công cộng định tuyến thẳng vào Cluster.
+
+## 3. Ingress: Điều hướng truy cập ngoại mạng
+Nếu sử dụng Service loại NodePort hoặc LoadBalancer cho hàng chục ứng dụng, cấu trúc mạng của hệ thống sẽ trở nên phức tạp, rời rạc và rất tốn kém (do phải mua nhiều địa chỉ IP công cộng).
+- **Vai trò của Ingress**: Ingress hoạt động ở tầng ứng dụng mạng (tầng 7). Khác với Service thông thường, Ingress đóng vai trò như một bộ định tuyến thông minh duy nhất, tiếp nhận toàn bộ lưu lượng HTTP/HTTPS từ bên ngoài, sau đó điều hướng vào các Service nội bộ tương ứng dựa trên tên miền (Host) hoặc đường dẫn chi tiết (Path).
+- **Ingress Controller**: Bản thân tài nguyên Ingress chỉ là một tập hợp các quy tắc định tuyến trên giấy tờ. Để các quy tắc này thực sự có tác dụng, Cluster cần cài đặt một Ingress Controller (ví dụ: ingress-nginx, Traefik). Khi một luật Ingress được khai báo, Ingress Controller sẽ đọc luật đó và tự động tinh chỉnh cấu hình cho bộ định tuyến thực tế (như Nginx).
+- **Xử lý bảo mật tập trung (TLS Termination)**: Ingress cho phép cấu hình chứng chỉ bảo mật SSL/TLS tại một điểm duy nhất trên biên của hệ thống. Toàn bộ lưu lượng mã hóa từ người dùng cuối sẽ được giải mã tại Ingress Controller trước khi chuyển tiếp (dưới dạng bản rõ) đến các Pod nội bộ. Cơ chế này giúp giảm thiểu đáng kể gánh nặng tính toán mã hóa cho từng khối ứng dụng riêng lẻ.
