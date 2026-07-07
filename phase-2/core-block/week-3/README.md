@@ -16,6 +16,10 @@
 - Khởi tạo Cluster cục bộ bằng k3d.
 - Triển khai Pod đầu tiên và thiết lập mạng nội bộ qua Port thông qua Service.
 
+### Day 2 - Deployment, Service, Ingress
+- Triển khai ứng dụng nhiều bản sao và cấu hình nâng cấp tự động không gián đoạn bằng Deployment.
+- Điều hướng và phân giải tên miền ảo nội bộ thông qua Ingress và Service.
+
 ## 2. Cách chạy
 ### Day 1 - k8s architecture, kubectl, install k3d, deploy first pod
 ```bash
@@ -38,6 +42,78 @@ kubectl expose pod web --type=ClusterIP
 kubectl get pods,svc
 ```
 
+### Day 2 - Lab 2: Deployment + Rolling Update
+```bash
+# - Deploy `demo-app:v1` (3 replica).
+kubectl create deployment demo-app --image=nginx:1.24 --replicas=3
+kubectl get pods
+# - Rolling update lên `v2`.
+kubectl set image deployment/demo-app nginx=nginx:1.25
+# - Theo dõi `kubectl rollout status`.
+kubectl rollout status deployment/demo-app
+# - Rollback.
+kubectl rollout undo deployment/demo-app
+```
+
+### Day 2 - Lab 3: Ingress
+```bash
+# Bọc Service cho Deployment để Ingress có thể trỏ vào
+kubectl expose deployment demo-app --port=80 --target-port=80
+
+# - Tạo Ingress route `app.local → demo-app:80`.
+cat <<EOF | kubectl apply -f -
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demo-ingress
+spec:
+  rules:
+  - host: app.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: demo-app
+            port:
+              number: 80
+EOF
+
+# Phân giải tên miền ảo trên máy Host
+echo "127.0.0.1 app.local" | sudo tee -a /etc/hosts
+curl http://app.local:8080
+
+# - TLS termination với cert tự sinh hoặc cert-manager + selfsigned ClusterIssuer.
+# Tạo chứng chỉ SSL tự sinh (Self-signed) cho tên miền app.local và lưu vào Secret
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=app.local"
+kubectl create secret tls demo-app-tls --key tls.key --cert tls.crt
+
+# Cập nhật Ingress để áp dụng chứng chỉ bảo mật (TLS Termination)
+cat <<EOF | kubectl apply -f -
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: demo-ingress
+spec:
+  tls:
+  - hosts:
+    - app.local
+    secretName: demo-app-tls
+  rules:
+  - host: app.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: demo-app
+            port:
+              number: 80
+EOF
+```
+
 ## 3. Kết quả
 ### Day 1 - k8s architecture, kubectl, install k3d, deploy first pod
 - Đã cài đặt thành công kubectl và k3d trên hệ thống.
@@ -48,12 +124,26 @@ kubectl get pods,svc
 ![Cài đặt công cụ](./screenshots/day1-kubectl-k3d-version.png)
 ![Khởi tạo Cluster & Triển khai Pod](./screenshots/day-1-kubectl-get-nodes-get-pods-svc.png)
 
+### Day 2 - Deployment, Service, Ingress
+- Đã kiểm thử thành công quy trình Rolling Update và Rollback an toàn trên Deployment.
+- Ingress đã kết nối thành công tên miền ảo `app.local` vào Service bên trong Cluster. Lệnh `curl` đã trả về thành công mã HTML mặc định của Nginx qua HTTP.
+- Cấu hình thành công TLS Termination trên Ingress sử dụng chứng chỉ tự sinh (Self-signed), đảm bảo truy cập HTTPS an toàn.
+
+![Tạo Deployment](./screenshots/day-2-get-pods-after-create-3-demo-app.png)
+![Quản lý Deployment](./screenshots/day-2-rollout-status.png)
+![Kiểm thử Ingress](./screenshots/day-2-tee-hosts-curl.png)
+![TLS Termination](./screenshots/day-2-tls-termination.png)
+
 ## 4. Khó khăn & cách giải quyết
 ### Day 1 - k8s architecture, kubectl, install k3d, deploy first pod
 - **Lỗi sập Server node (Closing database connections)**: Lệnh tạo Cluster bị kẹt ở `Starting agents...` và `kubectl` liên tục báo lỗi `connection refused`.
   - *Cách fix*: Nguyên nhân do bản image tự kéo mặc định (`v1.35.5-k3s1`) gặp trục trặc nội bộ. Khắc phục bằng cách xóa Cluster hỏng (`k3d cluster delete dev`) và ép k3d dùng bản ổn định bằng cờ `--image rancher/k3s:v1.30.3-k3s1`.
 - **Lỗi đụng độ Port (port is already allocated)**: Docker không thể khởi tạo loadbalancer vì port 8080 trên máy đã bị chiếm dụng.
   - *Cách fix*: Dùng lệnh `docker ps` để dò tìm mã ID của Container rác đang chạy ngầm trên port 8080, sau đó tiêu diệt nó bằng `docker rm -f <Container-ID>` để giải phóng hoàn toàn port này.
+
+### Day 2 - Deployment, Service, Ingress
+- **Lỗi Pending toàn bộ Pod (Disk Pressure)**: Kubelet từ chối lên lịch cho Pod do ổ cứng máy ảo (Ubuntu LVM) chỉ được cấp mặc định 20GB và đã bị đầy (Use% > 85%). Kubelet áp dụng taint cấm `disk-pressure`.
+  - *Cách fix*: Mở rộng phân vùng LVM trên Ubuntu để chiếm trọn phần dung lượng ảo chưa được dùng bằng các lệnh `sudo lvextend -l +100%FREE /dev/mapper/ubuntu--vg-ubuntu--lv` và `sudo resize2fs /dev/mapper/ubuntu--vg-ubuntu--lv`. Đồng thời kết hợp dọn rác bằng `docker system prune -a --volumes -f`.
 
 ## 5. Reference
 - Kubernetes Components Architecture: https://kubernetes.io/docs/concepts/overview/components/
