@@ -8,3 +8,6 @@ aws
 awscliv2.zip
 .env
 certs
+
+k8s-COURSES/
+curriculum.md
