@@ -5,9 +5,9 @@
 ## Task: `Week 3: Kubernetes Deep Dive`
 
 - **Intern**: `Nguyễn Quang Dũng`
-- **Phase / Week / Day**: `Phase 2 / Week 3 / Day 1`
+- **Phase / Week / Day**: `Phase 2 / Week 3 / Day 2`
 - **Branch**: `phase-2/week-3-kubernetes`
-- **Submitted at**: `2026-07-05 12:09` (timezone +07)
+- **Submitted at**: `2026-07-07 12:09` (timezone +07)
 - **Time spent**: `6h`
 
 ## 1. Mục tiêu
@@ -42,7 +42,8 @@ kubectl expose pod web --type=ClusterIP
 kubectl get pods,svc
 ```
 
-### Day 2 - Lab 2: Deployment + Rolling Update
+### Day 2: Deployment, Service, Ingress
+#### Lab 2: Deployment + Rolling Update
 ```bash
 # - Deploy `demo-app:v1` (3 replica).
 kubectl create deployment demo-app --image=nginx:1.24 --replicas=3
@@ -55,7 +56,7 @@ kubectl rollout status deployment/demo-app
 kubectl rollout undo deployment/demo-app
 ```
 
-### Day 2 - Lab 3: Ingress
+#### Lab 3: Ingress
 ```bash
 # Bọc Service cho Deployment để Ingress có thể trỏ vào
 kubectl expose deployment demo-app --port=80 --target-port=80
@@ -125,7 +126,7 @@ EOF
 ![Khởi tạo Cluster & Triển khai Pod](./screenshots/day-1-kubectl-get-nodes-get-pods-svc.png)
 
 ### Day 2 - Deployment, Service, Ingress
-- Đã kiểm thử thành công quy trình Rolling Update và Rollback an toàn trên Deployment.
+- Chạy thành công quy trình Rolling Update và Rollback an toàn trên Deployment.
 - Ingress đã kết nối thành công tên miền ảo `app.local` vào Service bên trong Cluster. Lệnh `curl` đã trả về thành công mã HTML mặc định của Nginx qua HTTP.
 - Cấu hình thành công TLS Termination trên Ingress sử dụng chứng chỉ tự sinh (Self-signed), đảm bảo truy cập HTTPS an toàn.
 
