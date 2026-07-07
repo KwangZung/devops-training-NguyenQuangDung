@@ -5,9 +5,9 @@
 ## Task: `Week 3: Kubernetes Deep Dive`
 
 - **Intern**: `Nguyễn Quang Dũng`
-- **Phase / Week / Day**: `Phase 2 / Week 3 / Day 2`
+- **Phase / Week / Day**: `Phase 2 / Week 3 / Day 3`
 - **Branch**: `phase-2/week-3-kubernetes`
-- **Submitted at**: `2026-07-07 12:09` (timezone +07)
+- **Submitted at**: `2026-07-07 22:09` (timezone +07)
 - **Time spent**: `6h`
 
 ## 1. Mục tiêu
