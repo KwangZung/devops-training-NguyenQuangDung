@@ -19,13 +19,13 @@ Kubernetes được thiết kế theo mô hình phân tán và mở rộng linh 
 
 ## 3. Công cụ quản trị (kubectl)
 Đây là công cụ giao tiếp qua Terminal tiêu chuẩn để tương tác với Cluster.
-- **Cơ chế hoạt động**: Công cụ này thu thập thông tin về địa chỉ API Server, chứng chỉ bảo mật và bối cảnh sử dụng từ một tệp cấu hình chuyên dụng. Sau đó, nó chuyển đổi các mệnh lệnh của người dùng trên Terminal thành các lời gọi API RESTful tiêu chuẩn để gửi tới API Server.
+- **Cơ chế hoạt động**: Công cụ này thu thập thông tin về địa chỉ API Server, chứng chỉ bảo mật và bối cảnh sử dụng từ một file cấu hình chuyên dụng. Sau đó, nó chuyển đổi các mệnh lệnh của người dùng trên Terminal thành các lời gọi API RESTful tiêu chuẩn để gửi tới API Server.
 - **Mô hình tương tác**: Hỗ trợ đồng thời việc ra lệnh trực tiếp (chỉ định thao tác sửa đổi cụ thể trên Terminal) và mô hình khai báo (cung cấp YAML file định nghĩa trạng thái mong muốn để hệ thống tự động thiết lập). Mô hình khai báo là nền tảng cốt lõi cho việc tự động hóa quá trình vận hành hạ tầng.
 
 ## 4. Cơ chế cài đặt hệ thống thu gọn (install k3d)
 K3d là một công cụ mã nguồn mở được thiết kế để chạy các Cluster K3s bên trong các Container Docker.
-- **Đặc điểm kiến trúc**: K3s đã lược bỏ các thành phần nền tảng cũ, đồng thời tối ưu hóa nhân để có thể chạy chỉ bằng một tệp thực thi duy nhất. K3d tận dụng điều kiện này bằng cách gói toàn bộ hệ thống K3s vào trong các Image Docker. Điều này cho phép tạo ra toàn bộ Cluster đa Node dưới dạng nhiều tiến trình riêng biệt trên cùng một Server vật lý.
-- **Nguyên lý thiết lập**: việc cài đặt K3d chỉ yêu cầu hệ thống phải có sẵn môi trường Docker. Quá trình khởi tạo Cluster thông qua K3d là quá trình cấu hình mạng nội bộ Docker, định tuyến các Port điều khiển từ môi trường vật lý vào bên trong Cluster ảo, và cuối cùng là tự động sinh ra tệp cấu hình xác thực để công cụ Terminal có thể lập tức tương tác với Cluster ảo đó.
+- **Đặc điểm kiến trúc**: K3s đã lược bỏ các thành phần nền tảng cũ, đồng thời tối ưu hóa nhân để có thể chạy chỉ bằng một file thực thi duy nhất. K3d tận dụng điều kiện này bằng cách gói toàn bộ hệ thống K3s vào trong các Image Docker. Điều này cho phép tạo ra toàn bộ Cluster đa Node dưới dạng nhiều tiến trình riêng biệt trên cùng một Server vật lý.
+- **Nguyên lý thiết lập**: việc cài đặt K3d chỉ yêu cầu hệ thống phải có sẵn môi trường Docker. Quá trình khởi tạo Cluster thông qua K3d là quá trình cấu hình mạng nội bộ Docker, định tuyến các Port điều khiển từ môi trường vật lý vào bên trong Cluster ảo, và cuối cùng là tự động sinh ra file cấu hình xác thực để công cụ Terminal có thể lập tức tương tác với Cluster ảo đó.
 
 ## 5. Quá trình triển khai ứng dụng (deploy first pod)
 Pod là đơn vị tính toán nhỏ nhất và cơ bản nhất có thể được quản lý trong hệ thống phân tán này. Quá trình triển khai một Pod không chỉ đơn giản là khởi động một tiến trình, mà là một chuỗi phối hợp chặt chẽ giữa nhiều thành phần:
@@ -57,3 +57,27 @@ Nếu sử dụng Service loại NodePort hoặc LoadBalancer cho hàng chục �
 - **Ingress Controller**: Bản thân tài nguyên Ingress chỉ là một tập hợp các quy tắc định tuyến trên giấy tờ. Để các quy tắc này thực sự có tác dụng, Cluster cần cài đặt một Ingress Controller (ví dụ: ingress-nginx, Traefik). Khi một luật Ingress được khai báo, Ingress Controller sẽ đọc luật đó và tự động tinh chỉnh cấu hình cho bộ định tuyến thực tế (như Nginx).
 - **Xử lý bảo mật tập trung (TLS Termination)**: Khi người dùng truy cập web bằng HTTPS, mọi dữ liệu truyền đi đều bị mã hóa. Thay vì bắt từng Pod riêng lẻ phải lưu trữ chứng chỉ và tự giải mã (gây lãng phí tài nguyên và khó quản lý), kỹ thuật TLS Termination giao phó nhiệm vụ này cho Ingress Controller. Ingress Controller sẽ trực tiếp giải mã lưu lượng HTTPS ngay tại cổng vào (kết thúc quá trình mã hóa), sau đó đẩy luồng dữ liệu bản rõ (HTTP thông thường) vào cho các Pod bên trong xử lý một cách nhẹ nhàng.
 - **Chứng chỉ tự sinh (Self-signed Certificate)**: Để Ingress Controller có thể mã hóa và giải mã, nó cần một chứng chỉ bảo mật (SSL/TLS Certificate). Trong môi trường thực hành nội bộ (ví dụ: tên miền ảo `app.local`), hệ thống không thể mua chứng chỉ thật từ các tổ chức xác thực. Do đó, kỹ sư thường sử dụng công cụ như `openssl` hoặc `cert-manager` để tự tạo ra một chứng chỉ giả lập (Self-signed) và cấp phát cho Ingress, qua đó mô phỏng hoàn hảo một hệ thống chạy HTTPS an toàn như trong thực tế.
+
+---
+
+# Báo cáo Lý thuyết Day 3 - ConfigMap, Secret, env injection, projected volume
+
+## 1. ConfigMap: Quản lý cấu hình ứng dụng
+Việc gắn chặt cấu hình vào bên trong Image của ứng dụng làm giảm tính di động và khó thay đổi khi triển khai ở các môi trường khác nhau.
+- **Vai trò**: ConfigMap là một đối tượng API được sử dụng để lưu trữ dữ liệu không nhạy cảm dưới dạng các cặp key-value. Thành phần này cho phép tách biệt cấu hình môi trường ra khỏi Image của Container, giúp ứng dụng duy trì được tính Stateless và dễ dàng di chuyển.
+- **Cách thức sử dụng**: Pod có thể tiêu thụ dữ liệu từ ConfigMap bằng cách nạp thành các biến môi trường, truyền vào làm tham số dòng lệnh khi khởi động Container, hoặc gắn vào hệ thống dưới dạng các file thông qua Volume.
+
+## 2. Secret: Bảo mật dữ liệu nhạy cảm
+Bên cạnh cấu hình thông thường, ứng dụng thường cần những thông tin bảo mật như mật khẩu, token xác thực, hoặc chứng chỉ web.
+- **Vai trò**: Secret hoạt động tương tự như ConfigMap nhưng được thiết kế chuyên biệt để chứa dữ liệu nhạy cảm. Việc sử dụng Secret giúp kỹ sư không cần phải lưu trữ dữ liệu tuyệt mật trực tiếp trong mã nguồn ứng dụng.
+- **Tính năng chính**: Mặc định, Secret mã hóa dữ liệu dưới định dạng Base64. Hệ thống cũng hỗ trợ các loại Secret chuyên dụng khác như chứng chỉ TLS hoặc thông tin đăng nhập vào Registry, giúp Kubelet trên các Node có thể xác thực và tải Image về một cách an toàn.
+
+## 3. Inject env thành biến môi trường
+Khi ứng dụng cần đọc cấu hình đơn giản, cách phổ biến nhất là truyền thông qua biến môi trường.
+- **Ánh xạ đơn lẻ**: Kỹ sư khai báo thuộc tính tương ứng trong cấu hình Container của Pod, kết hợp với các tham chiếu để trỏ chính xác một biến môi trường tới một key cụ thể bên trong ConfigMap hoặc Secret.
+- **Ánh xạ hàng loạt**: Nếu một ConfigMap chứa rất nhiều cấu hình, sử dụng thuộc tính nạp toàn cục sẽ lập tức đẩy toàn bộ các cặp key-value bên trong ConfigMap đó thành các biến môi trường cho Container, giúp lược bỏ việc khai báo lặp đi lặp lại.
+
+## 4. Gắn cấu hình thành file với Projected Volume
+Đối với các ứng dụng yêu cầu đọc file cấu hình phức tạp, việc dùng biến môi trường là không khả thi. Kubernetes giải quyết vấn đề này bằng cách biến dữ liệu thành các file thực tế thông qua Volume.
+- **Cơ chế hoạt động**: Trong định nghĩa Pod, kỹ sư khai báo một Volume trỏ tới ConfigMap hoặc Secret, sau đó gắn Volume này vào một folder cụ thể bên trong Container.
+- **Quá trình ánh xạ**: Khi Container khởi động, Kubernetes sẽ tự động biến mỗi key trong ConfigMap hoặc Secret thành một file vật lý, với nội dung file chính là value của key đó. Cơ chế Projected Volume này đặc biệt an toàn cho Secret vì dữ liệu được gắn trực tiếp trên RAM (tmpfs) thay vì ghi xuống ổ cứng vật lý của Node, giúp giảm thiểu tối đa nguy cơ rò rỉ thông tin.

@@ -1,6 +1,6 @@
 # Task Submission Template
 
-> Mỗi task = 1 thư mục con + 1 PR/MR riêng. Copy template này vào `README.md` của task.
+> Mỗi task = 1 folder con + 1 PR/MR riêng. Copy template này vào `README.md` của task.
 
 ## Task: `Week 3: Kubernetes Deep Dive`
 
@@ -19,6 +19,11 @@
 ### Day 2 - Deployment, Service, Ingress
 - Triển khai ứng dụng nhiều bản sao và cấu hình nâng cấp tự động không gián đoạn bằng Deployment.
 - Điều hướng và phân giải tên miền ảo nội bộ thông qua Ingress và Service.
+
+### Day 3 - ConfigMap, Secret, env injection, projected volume
+- Tách biệt cấu hình ứng dụng khỏi Image bằng cách sử dụng ConfigMap.
+- Quản lý và nạp dữ liệu nhạy cảm an toàn thông qua Secret.
+- Thực hành inject cấu hình (Biến môi trường và Projected Volume) bằng phương pháp Declarative YAML.
 
 ## 2. Cách chạy
 ### Day 1 - k8s architecture, kubectl, install k3d, deploy first pod
@@ -115,6 +120,29 @@ spec:
 EOF
 ```
 
+### Day 3: ConfigMap, Secret, env injection, projected volume
+#### Các file declarative YAML trong folder [day-3](./day-3)
+- **`configmap.yaml`**: Khởi tạo tài nguyên `ConfigMap` để lưu trữ các cấu hình không nhạy cảm dưới dạng key-value (cụ thể là biến `APP_COLOR`).
+- **`secret.yaml`**: Khởi tạo tài nguyên `Secret`. Việc sử dụng khóa `stringData` (thay vì `data`) giúp kỹ sư có thể khai báo mật khẩu bằng văn bản thuần túy, Kubernetes sẽ đảm nhận việc tự động mã hóa nó sang định dạng Base64.
+- **`pod.yaml`**: Định nghĩa một `Pod` đóng vai trò nhận cấu hình. Thuộc tính `env` sử dụng tham chiếu `configMapKeyRef` để kéo giá trị từ ConfigMap inject thành biến môi trường. Trong khi đó, thuộc tính `volumes` và `volumeMounts` kết hợp với nhau để giải mã Secret và gắn nó thành một file vật lý (Projected Volume) tại folder `/etc/app-secret` bên trong Container.
+
+```bash
+# - Áp dụng toàn bộ file declarative YAML trong folder day-3/
+kubectl apply -f day-3/
+
+# - Kiểm tra các tài nguyên vừa được tạo
+kubectl get configmap,secret,pod
+
+# - Kiểm tra biến môi trường được inject từ ConfigMap
+kubectl exec demo-config-pod -- env | grep APP_COLOR
+
+# - Kiểm tra file cấu hình vật lý được sinh ra từ Secret (Projected Volume)
+kubectl exec demo-config-pod -- cat /etc/app-secret/DB_PASSWORD
+
+# - Xóa các tài nguyên sau khi thực hành
+kubectl delete -f day-3/
+```
+
 ## 3. Kết quả
 ### Day 1 - k8s architecture, kubectl, install k3d, deploy first pod
 - Đã cài đặt thành công kubectl và k3d trên hệ thống.
@@ -122,7 +150,10 @@ EOF
 - Pod `web` được kéo Image Nginx và đang chạy (Running).
 - Service `web` đã cấp phát địa chỉ ClusterIP thành công để mở Port 80.
 
+- **Cài đặt công cụ**: Ảnh chụp xác nhận phiên bản của `kubectl` và `k3d` đã được cài đặt thành công trên hệ thống.
 ![Cài đặt công cụ](./screenshots/day1-kubectl-k3d-version.png)
+
+- **Khởi tạo Cluster & Triển khai Pod**: Ảnh chụp hệ thống hiển thị danh sách các Node đang hoạt động (Ready), cùng với Pod `web` và Service tương ứng đang chạy.
 ![Khởi tạo Cluster & Triển khai Pod](./screenshots/day-1-kubectl-get-nodes-get-pods-svc.png)
 
 ### Day 2 - Deployment, Service, Ingress
@@ -130,10 +161,31 @@ EOF
 - Ingress đã kết nối thành công tên miền ảo `app.local` vào Service bên trong Cluster. Lệnh `curl` đã trả về thành công mã HTML mặc định của Nginx qua HTTP.
 - Cấu hình thành công TLS Termination trên Ingress sử dụng chứng chỉ tự sinh (Self-signed), đảm bảo truy cập HTTPS an toàn.
 
+- **Tạo Deployment**: Ảnh chụp khởi tạo thành công Deployment `demo-app` với 3 bản sao (replicas) đang chạy.
 ![Tạo Deployment](./screenshots/day-2-get-pods-after-create-3-demo-app.png)
+
+- **Quản lý Deployment**: Ảnh chụp quá trình Rolling Update đã hoàn tất và trạng thái Rollback đã hoạt động.
 ![Quản lý Deployment](./screenshots/day-2-rollout-status.png)
-![Kiểm thử Ingress](./screenshots/day-2-tee-hosts-curl.png)
+
+- **Kiểm tra Ingress**: Ảnh chụp lệnh kiểm tra phân giải tên miền ảo trên máy Host và phản hồi thành công từ Nginx khi truy cập qua giao thức HTTP.
+![Kiểm tra Ingress](./screenshots/day-2-tee-hosts-curl.png)
+
+- **Cấu hình TLS Termination**: Ảnh chụp Ingress đã sử dụng chứng chỉ tự sinh để bảo mật kết nối HTTPS thành công.
 ![TLS Termination](./screenshots/day-2-tls-termination.png)
+
+### Day 3 - ConfigMap, Secret, env injection, projected volume
+- Áp dụng thành công toàn bộ tài nguyên (ConfigMap, Secret, Pod) thông qua folder khai báo Declarative YAML.
+- Biến môi trường (APP_COLOR) từ ConfigMap đã được truyền thành công vào bên trong Container.
+- Dữ liệu Secret đã được ánh xạ thành công thành một file vật lý an toàn thông qua Projected Volume.
+
+- **Khởi tạo tài nguyên**: Ảnh chụp lệnh kiểm tra `kubectl get` sau khi áp dụng cấu hình. Hệ thống đã ghi nhận đầy đủ ConfigMap, Secret và Pod mục tiêu đang ở trạng thái Running.
+![Tạo tài nguyên Declarative](./screenshots/day-3-kubectl-get-configmap-secret-pod.png)
+
+- **Kiểm tra biến môi trường**: Ảnh chụp lệnh kiểm tra `env` bên trong Container. Giá trị cấu hình từ ConfigMap đã thực sự được nạp thành công.
+![Kiểm tra biến môi trường](./screenshots/day-3-check-env-injection.png)
+
+- **Kiểm tra Projected Volume**: Ảnh chụp lệnh kiểm tra khi đọc file vật lý được gắn vào bên trong Container. Dữ liệu từ Secret đã được ánh xạ chính xác vào folder được yêu cầu.
+![Kiểm tra file cấu hình](./screenshots/day-3-check-secret-injection.png)
 
 ## 4. Khó khăn & cách giải quyết
 ### Day 1 - k8s architecture, kubectl, install k3d, deploy first pod
