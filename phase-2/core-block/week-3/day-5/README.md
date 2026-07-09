@@ -17,14 +17,34 @@
 
 ## 2. Cách chạy
 
+### Yêu cầu Output: Lab phân quyền user ro/rw + deny-all
+- **ro (Read-Only)**: Đã cấu hình quyền chỉ đọc cho User `john` và `sarah` (xem chi tiết ở phần **Thực hành RBAC** bên dưới).
+- **rw (Read-Write)**: Cấp quyền Đọc-Ghi đối với Pod cho User `alice`.
+  - Khởi tạo Role và RoleBinding:
+    ```bash
+    kubectl apply -f role_pod-rw.yaml
+    kubectl apply -f roleBinding_pod-rw.yaml
+    ```
+  - Kiểm tra quyền:
+    ```bash
+    kubectl auth can-i list pods --namespace=demo-rbac --as=alice
+    kubectl auth can-i create pods --namespace=demo-rbac --as=alice
+    kubectl auth can-i delete pods --namespace=demo-rbac --as=alice
+    ```
+
+    Kết quả: alice có đầy đủ quyết rw
+    ![Kiểm tra quyền của alice](./screenshots/role_rw_check_permission_of_alice.png)
+
+- **deny-all**: Đã cấu hình NetworkPolicy chặn toàn bộ Ingress với file [np_deny-all.yaml](np_deny-all.yaml) (xem chi tiết ở phần **Thực hành NetworkPolicy** bên dưới).
+
 ### Thực hành RBAC: gắn role và cluster role cho 2 user rồi kiểm tra quyền
 **Tạo Namespace và áp dụng cấu hình RBAC**
 
 Các file cấu hình được sử dụng bao gồm:
-- [role_pod-reader.yaml](role_pod-reader.yaml): Định nghĩa Role `pod-reader` trong Namespace `demo-rbac`, cấp quyền `get`, `list`, và `watch` đối với Pod.
-- [roleBinding_read-pods-binding.yaml](roleBinding_read-pods-binding.yaml): Định nghĩa RoleBinding `read-pods-binding` để gán Role `pod-reader` cho User `john` trong Namespace `demo-rbac`.
-- [clusterRole_secret-reader.yaml](clusterRole_secret-reader.yaml): Định nghĩa ClusterRole `secret-reader` ở phạm vi toàn Cluster, cấp quyền `get` và `list` đối với Secret.
-- [clusterRoleBinding_secret-reader-binding.yaml](clusterRoleBinding_secret-reader-binding.yaml): Định nghĩa ClusterRoleBinding `secret-reader-binding` để gán ClusterRole `secret-reader` cho User `sarah`.
+- [role_pod-reader.yaml](role_pod-reader.yaml): Định nghĩa Role `pod-reader` (quyền Read-Only: `get`, `list`, `watch`) đối với Pod.
+- [roleBinding_read-pods-binding.yaml](roleBinding_read-pods-binding.yaml): Gán Role `pod-reader` cho User `john`.
+- [clusterRole_secret-reader.yaml](clusterRole_secret-reader.yaml): Định nghĩa ClusterRole `secret-reader` ở phạm vi toàn Cluster.
+- [clusterRoleBinding_secret-reader-binding.yaml](clusterRoleBinding_secret-reader-binding.yaml): Gán ClusterRole `secret-reader` cho User `sarah`.
 
 Thực thi các lệnh sau để tạo Namespace và apply cấu hình:
 
@@ -36,7 +56,7 @@ kubectl apply -f clusterRole_secret-reader.yaml
 kubectl apply -f clusterRoleBinding_secret-reader-binding.yaml
 ```
 
-**Kiểm tra quyền của User john**
+**Kiểm tra quyền của User john (Read-Only)**
 
 ```bash
 kubectl auth can-i list pods --namespace=demo-rbac --as=john
