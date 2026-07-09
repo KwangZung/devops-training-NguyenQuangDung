@@ -100,6 +100,8 @@ Dữ liệu ghi vào `/data` được ánh xạ xuống PV vật lý và tồn t
 | Phù hợp với | Môi trường học tập, Cluster nhỏ | Môi trường production, Cloud |
 | Hạn chế | Quản trị viên phải dự đoán trước nhu cầu | Cần Provisioner được cài đặt và cấu hình đúng |
 
+Với Dynamic Provisioning, khi PVC được tạo ra, Kubernetes cần biết hai thông tin: *ai* sẽ tạo PV và *tạo như thế nào*. StorageClass chính là thành phần cung cấp hai thông tin đó — nó khai báo Provisioner nào sẽ được gọi (ví dụ: `rancher.io/local-path`, `ebs.csi.aws.com`) và các tham số cấu hình đi kèm (loại ổ đĩa, chính sách thu hồi...). Nếu không có StorageClass, Kubernetes không có cơ sở để tự động tạo PV vì nó không biết phải gọi hệ thống lưu trữ nào ở phía dưới.
+
 ---
 
 ## 6. StorageClass

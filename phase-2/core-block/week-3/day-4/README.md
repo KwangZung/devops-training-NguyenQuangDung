@@ -53,6 +53,10 @@ cat /mnt/data/proof.txt
 ```
 ![static-provisioning-check-data-in-node](./screenshots/static-provisioning-check-data-in-node.png)
 
+```bash
+kubectl delete -f storage.yaml # gỡ PV và PVC, và pod đang được bind với PVC
+```
+
 ### 2.2 Dynamic Provisioning — StorageClass + PVC tự động
 
 ```bash
@@ -70,19 +74,24 @@ kubectl apply -f dynamicPod.yaml
 kubectl get pvc pvc-dynamic  # kiểm tra STATUS phải là Bound
 kubectl get pod app-dynamic -o wide  # xác nhận Node đang chạy Pod
 ```
+![dynamic-provisioning-get-pvc-pvc-dynamic](./screenshots/dynamic-provisioning-get-pvc-pvc-dynamic.png)
+![](./screenshots/dynamic-provisioning-get-pod-dynamic-pod.png)
+
+PVC `pvc-dynamic` [khai báo trong `persistentVolumeClaim.yaml`](./persistentVolumeClaim.yaml) được mount vào đường dẫn `/var/data` bên trong Pod `app-dynamic` (khai báo trong [`dynamicPod.yaml`](./dynamicPod.yaml)). Dữ liệu vật lý được Provisioner `rancher.io/local-path` lưu tại 1 folder nào đó trong `/var/lib/rancher/k3s/storage/` trên Node `k3d-dev-agent-0` đang chạy Pod.
 
 Để kiểm tra dữ liệu được ghi thực sự xuống Node:
 
 ```bash
-# ghi dữ liệu vào volume bên trong Pod
-kubectl exec -it app-dynamic -- sh -c 'echo "Hello dynamic volume" > /var/data/proof.txt'
+# ghi dữ liệu vào /var/data bên trong Pod, đây là mountPath của PVC
+kubectl exec -it app-dynamic -- sh -c 'echo "Hello dynamic volume" > /var/data/proof2.txt'
 
-# truy cập vào Node đang chạy Pod (thay k3d-dev-agent-1 nếu khác)
-docker exec -it k3d-dev-agent-1 sh
+# truy cập vào Node
+docker exec -it k3d-dev-agent-0 sh
 
-# kiểm tra dữ liệu trên Node
-cat /var/lib/rancher/k3s/storage/pvc-*/proof.txt
+ls /var/lib/rancher/k3s/storage/ # kiểm tra chính xác folder mà dữ liệu được lưu
+cat /var/lib/rancher/k3s/storage/pvc-c1aeb887-b81b-4743-9f00-c6ccee9495ca_demo-volume-mount_pvc-dynamic/proof2.txt
 ```
+![](./screenshots/dynamic-provisioning-check-data-in-volume.png)
 
 ### 2.3 Cài đặt Rancher
 
@@ -132,7 +141,7 @@ kubectl -n cattle-system rollout status deploy/rancher
 kubectl -n cattle-system port-forward svc/rancher 8443:443
 ```
 
-Truy cập `https://localhost:8443`, bỏ qua cảnh báo chứng chỉ self-signed, đăng nhập với mật khẩu `admin`.
+Truy cập `https://localhost:8443`, đăng nhập bằng tài khoản `admin`.
 
 ## 3. Kết quả
 
