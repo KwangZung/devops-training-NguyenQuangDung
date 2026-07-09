@@ -56,11 +56,62 @@ kubectl auth can-i list pods --namespace=demo-rbac --as=sarah
 
 ![Kiểm tra quyền của sarah](screenshots/rbac-check-sarah-permission.png)
 
+### Thực hành ServiceAccount: cấp quyền cho Pod và kiểm tra bằng Token
+
+**Khởi tạo ServiceAccount và cấp quyền**
+
+Các file cấu hình được sử dụng bao gồm:
+- [serviceAccount_my-app-sa.yaml](serviceAccount_my-app-sa.yaml): Khởi tạo ServiceAccount `my-app-sa` trong Namespace `demo-rbac`.
+- [roleBinding_my-app-binding.yaml](roleBinding_my-app-binding.yaml): Liên kết ServiceAccount `my-app-sa` với Role `pod-reader`, giúp ServiceAccount có quyền đọc Pod.
+- [pod_my-app.yaml](pod_my-app.yaml): Tạo Pod `my-app` chạy Nginx và tự động inject Token của `my-app-sa` thông qua thuộc tính `serviceAccountName`.
+
+Thực thi các lệnh sau để khởi tạo:
+
+```bash
+kubectl apply -f serviceAccount_my-app-sa.yaml
+kubectl apply -f roleBinding_my-app-binding.yaml
+kubectl apply -f pod_my-app.yaml
+```
+
+**Kiểm tra quyền từ bên ngoài (Impersonation)**
+
+```bash
+kubectl auth can-i list pods --namespace=demo-rbac --as=system:serviceaccount:demo-rbac:my-app-sa
+kubectl auth can-i list secrets --namespace=demo-rbac --as=system:serviceaccount:demo-rbac:my-app-sa
+```
+
+![Kiểm tra quyền của ServiceAccount từ bên ngoài](screenshots/serviceAccount-check-pod-permission.png)
+
+**Kiểm tra từ bên trong Pod (Gọi API trực tiếp)**
+
+Truy cập vào shell của Pod và gọi Kubernetes API:
+
+```bash
+kubectl exec -it my-app --namespace=demo-rbac -- /bin/bash
+
+TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+CACERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+
+# lấy danh sách Pod trong Namespace demo-rbac
+curl -s --cacert $CACERT -H "Authorization: Bearer $TOKEN" https://kubernetes.default.svc/api/v1/namespaces/demo-rbac/pods
+```
+
+![Kiểm tra đọc Pod thành công](screenshots/serviceAccount-try-list-pods-in-pod.png)
+Kết quả: thành công
+```bash
+# lấy danh sách Secret trong Namespace demo-rbac
+curl -s --cacert $CACERT -H "Authorization: Bearer $TOKEN" https://kubernetes.default.svc/api/v1/namespaces/demo-rbac/secrets
+```
+
+![Kiểm tra đọc Secret bị từ chối](screenshots/serviceAccount-try-list-secrets-in-pod.png)
+Kết quả: thất bại
+
 ## 3. Kết quả
 
 - Đã thiết lập và kiểm tra thành công quyền của các User.
 - Phân quyền giới hạn Namespace hoạt động chính xác với Role và RoleBinding.
 - Phân quyền toàn Cluster hoạt động chính xác với ClusterRole và ClusterRoleBinding.
+- Đã cấu hình và kiểm tra thành công cơ chế phân quyền cho Pod thông qua ServiceAccount và tự động inject Token.
 
 ## 4. Khó khăn & cách giải quyết
 
