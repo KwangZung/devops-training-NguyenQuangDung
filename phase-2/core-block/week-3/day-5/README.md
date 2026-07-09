@@ -106,12 +106,78 @@ curl -s --cacert $CACERT -H "Authorization: Bearer $TOKEN" https://kubernetes.de
 ![Kiểm tra đọc Secret bị từ chối](screenshots/serviceAccount-try-list-secrets-in-pod.png)
 Kết quả: thất bại
 
+### Thực hành NetworkPolicy: kiểm soát traffic giữa các Pod
+
+**Khởi tạo các Pod và Service**
+
+Các file cấu hình được sử dsụng bao gồm:
+- [np_backend.yaml](np_backend.yaml): Khởi tạo Pod `backend` và Service `backend-svc`.
+- [np_frontend.yaml](np_frontend.yaml): Khởi tạo Pod `frontend` đóng vai trò Client hợp lệ.
+- [np_hacker.yaml](np_hacker.yaml): Khởi tạo Pod `hacker` đóng vai trò Client trái phép.
+- [np_deny-all.yaml](np_deny-all.yaml): NetworkPolicy chặn tất cả lưu lượng đi vào mạng (Ingress).
+- [np_allow-frontend.yaml](np_allow-frontend.yaml): NetworkPolicy chỉ cho phép Pod `frontend` truy cập vào Pod `backend`.
+
+Thực thi lệnh sau để khởi tạo các Pod:
+
+```bash
+kubectl create namespace demo-network
+kubectl apply -f np_backend.yaml
+kubectl apply -f np_frontend.yaml
+kubectl apply -f np_hacker.yaml
+```
+
+**Kiểm tra khi chưa có NetworkPolicy (Mở cửa tự do)**
+
+```bash
+# Từ frontend: Thành công
+kubectl exec -it frontend --namespace=demo-network -- wget -qO- backend-svc
+
+# Từ hacker: Thành công
+kubectl exec -it hacker --namespace=demo-network -- wget -qO- backend-svc
+```
+Kết quả: cả 2 đều thành công
+![](./screenshots/np-both-fe-and-hacker-can-access-be.png)
+
+**Áp dụng Deny-All (Khóa toàn bộ Ingress)**
+
+```bash
+kubectl apply -f np_deny-all.yaml
+```
+
+Kiểm tra lại.
+
+```bash
+kubectl exec -it frontend --namespace=demo-network -- wget -qO- backend-svc
+kubectl exec -it hacker --namespace=demo-network -- wget -qO- backend-svc
+```
+Kết quả: cả 2 đều thất bại
+![](./screenshots/np-both-fe-and-hacker-cannot-access-be.png)
+
+**Thiết lập Allow-List (Chỉ cho phép frontend)**
+
+```bash
+kubectl apply -f np_allow-frontend.yaml
+```
+
+Kiểm tra lại:
+
+```bash
+# Từ frontend: Kết nối thành công
+kubectl exec -it frontend --namespace=demo-network -- wget -qO- backend-svc
+
+# Từ hacker: Vẫn thất bại với lỗi Connection refused
+kubectl exec -it hacker --namespace=demo-network -- wget -qO- backend-svc
+```
+Kết quả: frontend thành công, hacker thất bại
+![](./screenshots/np-only-fe-can-access.png)
+
 ## 3. Kết quả
 
 - Đã thiết lập và kiểm tra thành công quyền của các User.
 - Phân quyền giới hạn Namespace hoạt động chính xác với Role và RoleBinding.
 - Phân quyền toàn Cluster hoạt động chính xác với ClusterRole và ClusterRoleBinding.
 - Đã cấu hình và kiểm tra thành công cơ chế phân quyền cho Pod thông qua ServiceAccount và tự động inject Token.
+- Đã áp dụng thành công NetworkPolicy để chặn và cho phép luồng dữ liệu (traffic) giữa các Pod một cách chọn lọc.
 
 ## 4. Khó khăn & cách giải quyết
 
