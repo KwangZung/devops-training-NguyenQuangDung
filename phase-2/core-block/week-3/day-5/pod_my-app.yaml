@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+
+metadata:
+  name: my-app
+  namespace: demo-rbac
+
+spec:
+  serviceAccountName: my-app-sa
+
+  containers:
+  - name: app
+    image: nginx
+  
+  
