@@ -93,7 +93,60 @@ cat /var/lib/rancher/k3s/storage/pvc-c1aeb887-b81b-4743-9f00-c6ccee9495ca_demo-v
 ```
 ![](./screenshots/dynamic-provisioning-check-data-in-volume.png)
 
-### 2.3 Cài đặt Rancher
+```bash
+# dọn dẹp pod và pvc và storage class
+kubectl delete -f dynamicPod.yaml
+kubectl delete -f persistentVolumeClaim.yaml
+kubectl delete -f storageClass.yaml
+```
+### 2.3 Postgres on k8s với PVC
+
+Các file YAML cấu hình bao gồm:
+- [`postgres-secret.yaml`](./postgres-secret.yaml): Khai báo Secret lưu trữ thông tin cấu hình (database, username, password) bằng `stringData`.
+- [`postgres-pvc.yaml`](./postgres-pvc.yaml): Khai báo PersistentVolumeClaim yêu cầu 1Gi bộ nhớ sử dụng StorageClass mặc định.
+- [`postgres-deployment.yaml`](./postgres-deployment.yaml): Khai báo Deployment ứng dụng `postgres:15`, đọc biến cấu hình từ Secret và mount PVC trực tiếp vào folder `/var/lib/postgresql/data`.
+- [`postgres-service.yaml`](./postgres-service.yaml): Khai báo Service để mở cổng truy cập 5432.
+
+```bash
+# tạo Secret chứa thông tin cấu hình
+kubectl apply -f postgres-secret.yaml
+
+# tạo PVC sử dụng StorageClass mặc định
+kubectl apply -f postgres-pvc.yaml
+
+# triển khai Postgres Deployment và Service
+kubectl apply -f postgres-deployment.yaml
+kubectl apply -f postgres-service.yaml
+
+# kiểm tra trạng thái các tài nguyên vừa tạo
+kubectl get pod -l app=postgres
+kubectl get pvc postgres-pvc
+```
+
+```bash
+# truy cập vào container chạy Postgres, kết nối vào database 'mydb' bằng user 'admin'
+kubectl exec -it deploy/postgres -- psql -U admin -d mydb
+```
+Bên trong prompt `psql`, thực hiện ghi dữ liệu:
+```sql
+CREATE TABLE test (id SERIAL, message TEXT);
+INSERT INTO test (message) VALUES ('data persists after pod deleted');
+SELECT * FROM test;
+\q
+```
+
+Kiểm tra khả năng lưu trữ dữ liệu (Persistence) của PVC:
+```bash
+# xóa Pod, Deployment sẽ tự động tạo Pod mới
+kubectl delete pod -l app=postgres
+
+# chờ Pod mới chuyển sang trạng thái Running, rồi truy cập lại để kiểm tra dữ liệu
+kubectl get pod -l app=postgres -w
+kubectl exec -it deploy/postgres -- psql -U admin -d mydb -c "SELECT * FROM test;"
+```
+Dữ liệu vẫn được giữ nguyên do được lưu trữ thông qua Persistent Volume Claim.
+![](./screenshots/postgres-add-data-to-db-in-pod-then-delete-then-check-if-data-remained.png)
+### 2.4 Cài đặt Rancher
 
 **Bước 1 — Cài cert-manager (Rancher phụ thuộc vào cert-manager để quản lý chứng chỉ TLS):**
 
@@ -147,6 +200,7 @@ Truy cập `https://localhost:8443`, đăng nhập bằng tài khoản `admin`.
 
 - PV và PVC static bind thành công, Pod mount volume và ghi dữ liệu vào `/data`.
 - Dynamic Provisioning hoạt động: StorageClass tự động tạo PV khi PVC được tạo ra, dữ liệu xuất hiện tại `/var/lib/rancher/k3s/storage/` trên Node.
+- Triển khai thành công Postgresql với PVC. Dữ liệu cấu hình truyền qua Secret, và dữ liệu cơ sở dữ liệu không bị mất khi Pod bị xóa.
 - Rancher chạy thành công, giao diện web hiển thị toàn bộ tài nguyên Cluster tại `https://localhost:8443`.
 
 ## 4. Khó khăn & cách giải quyết
