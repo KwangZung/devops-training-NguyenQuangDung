@@ -82,6 +82,48 @@ kubectl get hpa -w
 ```
 ![ảnh chụp theo dõi hpa scaling](./screenshots/hpa_monitor_pod_cpu_while_stressing.png)
 
+### Cấu hình Vertical Pod Autoscaler (VPA) cho demo-app
+
+**Các định nghĩa VPA:**
+- Khối `autoscaling` trong file **[values.yaml](./helm-chart/demo-app/values.yaml)**: Khai báo tắt HPA (`enabled: false`) và bật VPA (`enabled: true`) để tránh xung đột tài nguyên.
+- File **[templates/vpa.yaml](./helm-chart/demo-app/templates/vpa.yaml)**: File cấu hình mẫu tạo ra tài nguyên VerticalPodAutoscaler. Nó tự động gắn kết (targetRef) với Deployment của `demo-app` và áp dụng chế độ cập nhật `Auto` (tự động tính toán lại mức sử dụng CPU/Memory và khởi động lại Pod với cấu hình mới khi tải quá cao).
+
+**Bước 1: Cài đặt VPA Controller**
+```bash
+cd /tmp
+git clone https://github.com/kubernetes/autoscaler.git
+cd autoscaler/vertical-pod-autoscaler
+./hack/vpa-up.sh
+```
+
+**Bước 2: Bật tính năng VPA**
+Cập nhật file `values.yaml` (tắt HPA, bật VPA) và triển khai lại:
+```bash
+helm upgrade my-demo-release demo-app/
+```
+
+**Bước 3: Tạo tải ảo và kiểm tra gợi ý của VPA**
+Trên 1 cmd khác
+```bash
+kubectl run -i --tty load-generator --rm --image=busybox:1.28 --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://my-demo-release-demo-app; done"
+```
+Mở Terminal khác để xem thông số phần cứng mà VPA gợi ý (mục Recommendation):
+```bash
+kubectl describe vpa my-demo-release-demo-app-vpa
+```
+![ảnh chụp kết quả vpa](./screenshots/vpa_describe.png)
+
+**Bước 4: Kiểm tra VPA tự động thay thế Pod**
+Mặc định, VPA sẽ không tắt Pod nếu hệ thống chỉ chạy 1 Pod duy nhất (nhằm ngăn chặn gián đoạn dịch vụ). Để quan sát cơ chế `Auto` hoạt động thực tế, nâng số lượng Pod lên 2 bằng lệnh:
+```bash
+kubectl scale deployment my-demo-release-demo-app --replicas=2
+```
+Tiếp tục duy trì lệnh sinh tải, sau đó theo dõi quá trình VPA ra lệnh `Terminating` Pod cũ (thiếu tài nguyên) và tạo ra Pod mới (`ContainerCreating`) mang thông số phần cứng mạnh hơn:
+```bash
+kubectl get pods -w
+```
+![ảnh chụp quá trình vpa thay thế pod](./screenshots/vpa_pod_monitor.png)
+
 ## 3. Kết quả
 
 ## 4. Khó khăn & cách giải quyết
