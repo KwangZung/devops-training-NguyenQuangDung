@@ -53,8 +53,36 @@ kubectl get service
 ```
 ![get pods](./screenshots/hc_get-pods.png)
 ![get services](./screenshots/hc_get-services.png)
-## 3. Kết quả
 
+### Cấu hình Horizontal Pod Autoscaler (HPA) cho demo-app
+
+**Các định nghĩa HPA:**
+- Khối `autoscaling` trong file **[values.yaml](./helm-chart/demo-app/values.yaml)**: Khai báo các biến thiết lập ngưỡng cho HPA (như bật tính năng, số lượng Pod tối thiểu là 1, tối đa là 5, và mức phần trăm CPU kỳ vọng là 80%).
+- File **[templates/hpa.yaml](./helm-chart/demo-app/templates/hpa.yaml)**: File cấu hình mẫu tạo ra tài nguyên HorizontalPodAutoscaler. Nó nhận các biến từ `values.yaml` và tự động gắn kết (scaleTargetRef) với Deployment của `demo-app`. Khi mức độ sử dụng CPU của Pod vượt ngưỡng 80%, hệ thống sẽ tự động sinh thêm Pod mới.
+
+**Bước 1: Bật tính năng HPA**
+Kích hoạt HPA trong `values.yaml` (đặt `enabled: true` trong khối hpa) và cập nhật cấu hình lên Cluster:
+```bash
+helm upgrade my-demo-release demo-app/
+```
+
+**Bước 2: Kiểm tra trạng thái HPA**
+```bash
+kubectl get hpa
+```
+![ảnh chụp trạng thái hpa](./screenshots/hpa_get-hpa.png)
+
+**Bước 3: Tạo tải ảo để kiểm tra tự động mở rộng**
+```bash
+kubectl run -i --tty load-generator --rm --image=busybox:1.28 --restart=Never -- /bin/sh -c "while sleep 0.01; do wget -q -O- http://my-demo-release-demo-app; done"
+```
+Mở một Terminal khác để theo dõi số lượng Pod tự động tăng lên khi CPU quá tải:
+```bash
+kubectl get hpa -w
+```
+![ảnh chụp theo dõi hpa scaling](./screenshots/hpa_monitor_pod_cpu_while_stressing.png)
+
+## 3. Kết quả
 
 ## 4. Khó khăn & cách giải quyết
 
