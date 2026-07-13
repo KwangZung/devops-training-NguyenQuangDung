@@ -140,6 +140,75 @@ Các bước:
    - Lệnh ở Terminal 2 thất bại do file State đang bị khóa bởi tiến trình ở Terminal 1:
      ![lock failed](./screenshots/remote-backend_plan-failed-bcz-cannot-aquire-the-state-lock.png)
 
+### Module network, compute reuse cho 2 env
+#### Tạo các module có tên `network` và `compute`
+- **Module network**:
+  - [variables.tf](modules/network/variables.tf): Khai báo các Input Variables đầu vào như dải CIDR cho VPC (`vpc_cidr`), Subnet (`subnet_cidr`), và nhãn môi trường (`env`).
+  - [main.tf](modules/network/main.tf): Cấu hình định nghĩa tài nguyên mạng bao gồm `aws_vpc`, `aws_subnet`, `aws_internet_gateway` (IGW), `aws_route_table` (RT) và liên kết bảng định tuyến (`aws_route_table_association`) để thông suốt kết nối Internet.
+  - [outputs.tf](modules/network/outputs.tf): Định nghĩa các giá trị trả về bao gồm `vpc_id` và `subnet_id`.
+- **Module compute**:
+  - [variables.tf](modules/compute/variables.tf): Khai báo các Input Variables đầu vào như ID của VPC (`vpc_id`), Subnet (`subnet_id`), cấu hình dòng máy EC2 (`instance_type`), hệ điều hành (`ami_id`), và nhãn môi trường (`env`).
+  - [main.tf](modules/compute/main.tf): Cấu hình định nghĩa tài nguyên tường lửa `aws_security_group` và máy chủ `aws_instance` (sử dụng thuộc tính `user_data` để tự động cài đặt và chạy dịch vụ Nginx khi khởi tạo).
+  - [outputs.tf](modules/compute/outputs.tf): Định nghĩa các giá trị trả về bao gồm ID máy chủ (`instance_id`) và IP công cộng (`instance_public_ip`).
+
+#### Triển khai trên môi trường dev
+Các file cấu hình:
+- [main.tf](envs_2/dev/main.tf): Gọi hai Module `network` và `compute`, truyền thông số dải IP mạng dev, cấu hình máy chủ nhỏ (`t3.micro`) và liên kết output của module mạng vào module compute.
+- [outputs.tf](envs_2/dev/outputs.tf): Hiển thị thông số VPC ID và địa chỉ IP công cộng của máy chủ Dev sau khi khởi tạo thành công.
+
+Các bước:
+1. Di chuyển vào folder môi trường dev:
+   ```bash
+   cd envs_2/dev
+   ```
+2. Khởi tạo cấu hình Terraform:
+   ```bash
+   terraform init
+   ```
+3. Xem kế hoạch triển khai tài nguyên:
+   ```bash
+   terraform plan
+   ```
+4. Áp dụng cấu hình để triển khai tài nguyên lên AWS:
+   ```bash
+   terraform apply -auto-approve=true
+   curl -I http://18.138.254.36
+   ```
+   ![](./screenshots/network-compute_apply-in-dev.png)
+5. Khi không còn sử dụng, dọn dẹp các tài nguyên đã tạo:
+   ```bash
+   terraform destroy -auto-approve=true
+   ```
+
+#### Triển khai trên môi trường stg
+Các file cấu hình:
+- [main.tf](envs_2/stg/main.tf): Gọi hai Module `network` và `compute`, truyền thông số dải IP mạng staging, cấu hình máy chủ mạnh hơn (`t3.medium`) và liên kết output tương ứng.
+- [outputs.tf](envs_2/stg/outputs.tf): Hiển thị thông số VPC ID và địa chỉ IP công cộng của máy chủ Staging sau khi khởi tạo thành công.
+
+Các bước:
+1. Di chuyển vào folder môi trường stg:
+   ```bash
+   cd envs_2/stg
+   ```
+2. Khởi tạo cấu hình Terraform:
+   ```bash
+   terraform init
+   ```
+3. Xem kế hoạch triển khai tài nguyên:
+   ```bash
+   terraform plan
+   ```
+4. Áp dụng cấu hình để triển khai tài nguyên lên AWS:
+   ```bash
+   terraform apply -auto-approve=true
+   curl -I http://13.212.203.7
+   ```
+   ![](./screenshots/network-compute_apply-in-stg.png)
+5. Khi không còn sử dụng, dọn dẹp các tài nguyên đã tạo:
+   ```bash
+   terraform destroy -auto-approve=true
+   ```
+
 
 ## 3. Kết quả
 
