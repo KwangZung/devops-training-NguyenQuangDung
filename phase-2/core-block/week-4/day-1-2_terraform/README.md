@@ -109,14 +109,44 @@ Các bước:
    terraform destroy -auto-approve=true
    ```
 
+### Remote Backend (S3 + DynamoDB)
+#### Cấu hình lưu trữ State từ xa và kiểm tra cơ chế Lock State
 
+1. Cấu hình block `backend "s3"` trong file [envs/dev/main.tf](envs/dev/main.tf):
+   ```hcl
+   terraform {
+     backend "s3" {
+       bucket       = "xxxxx-terraform-states" # tên giả
+       key          = "dev/terraform.tfstate"
+       region       = "ap-southeast-2"
+       use_lockfile = true
+       encrypt      = true
+     }
+   }
+   ```
+2. Thực hiện khởi tạo và di chuyển dữ liệu State lên S3 Bucket:
+   ```bash
+   terraform init -migrate-state
+   ```
+3. Kiểm tra cơ chế Lock bằng cách chạy song song hai Terminal:
+   - Tại Terminal 1, chạy lệnh apply nhưng dừng ở bước chờ xác nhận:
+     ```bash
+     terraform apply
+     ```
+   - Tại Terminal 2, chạy lệnh plan:
+     ```bash
+     terraform plan
+     ```
+   - Lệnh ở Terminal 2 thất bại do file State đang bị khóa bởi tiến trình ở Terminal 1:
+     ![lock failed](./screenshots/remote-backend_plan-failed-bcz-cannot-aquire-the-state-lock.png)
 
 
 ## 3. Kết quả
 
 ## 4. Khó khăn & cách giải quyết
+- Cảnh báo tham số `dynamodb_table` deprecated khi chạy lệnh khởi tạo trên phiên bản Terraform 1.15.8: Hệ thống khuyến nghị sử dụng tham số `use_lockfile` để thực hiện khóa trạng thái trực tiếp trên S3. Hướng giải quyết là xóa tham số `dynamodb_table` và thêm cấu hình `use_lockfile = true` để tuân thủ theo chuẩn tối ưu mới.
+- Gặp lỗi 404 khi dùng `curl` kiểm tra kết nối qua Ingress: Do cấu hình Module `k8s-app` chỉ định class là `nginx`, trong khi Cluster k3d sử dụng Traefik làm Ingress Controller mặc định. Hướng giải quyết là lược bỏ hoàn toàn annotation `ingress.class = "nginx"` để Traefik tự động nhận diện và xử lý tài nguyên Ingress.
 
-Không có.
 
 ## 5. Reference
 - [SpaceLift - Terraform Modules Tutorial: Why Use Them, Best Practices, and Scaling](https://www.youtube.com/watch?v=Te4ijEaUGyU)

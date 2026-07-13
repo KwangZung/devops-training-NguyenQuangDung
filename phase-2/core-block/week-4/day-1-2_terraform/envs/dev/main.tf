@@ -6,6 +6,14 @@ terraform {
       version = "~> 2.0"
     }
   }
+  # config remote backend in s3
+  backend "s3" {
+    bucket       = "dungnq-terraform-states"
+    key          = "dev/terraform.tfstate"
+    region       = "ap-southeast-2"
+    use_lockfile = true
+    encrypt      = true
+  }
 }
 
 provider "kubernetes" {
