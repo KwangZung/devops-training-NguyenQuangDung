@@ -28,42 +28,26 @@ Các file cấu hình:
 - [outputs.tf](envs/dev/outputs.tf): Cấu hình hiển thị các giá trị Output Values nhận về từ Module `k8s-app` sau khi triển khai môi trường Dev.
 
 Các bước:
-1. Di chuyển vào folder môi trường dev:
-   ```bash
-   cd envs/dev
-   ```
-2. Khởi tạo Terraform để chuẩn bị các Provider và Module:
-   ```bash
-   terraform init
-   ```
-3. Xem kế hoạch triển khai tài nguyên hạ tầng:
-   ```bash
-   terraform plan
-   ```
-4. Áp dụng cấu hình để tạo các tài nguyên lên Cluster:
-   ```bash
-   terraform apply -auto-approve=true
-   ```
-   ![apply success in dev](./screenshots/tf_modules-apply-complete-in-dev.png)
-5. Kiểm tra lại các tài nguyên đã được tạo trên Cluster Kubernetes:
-   ```bash
-   kubectl get pods,svc,ingress -n default | grep "demo-app-dev"
-   ```
-   ![check resources in dev](./screenshots/tf-modules_check-dev-resources-in-k8s.png)
-6. Kiểm tra khả năng truy cập ứng dụng qua Ingress:
-   - Thực hiện port-forward service của Ingress Controller khi chưa map port ra ngoài:
-     ```bash
-     kubectl port-forward service/traefik 8080:80 -n kube-system
-     ```
-   - Chạy lệnh `curl` giả lập Header Host để kiểm tra:
-     ```bash
-     curl -H "Host: dev.demo.local" http://localhost:8080
-     ```
-     ![curl dev](./screenshots/tf-modules_curl-dev.png)
-7. Dọn dẹp các tài nguyên đã triển khai:
-   ```bash
-   terraform destroy -auto-approve=true
-   ```
+```bash
+cd envs/dev
+terraform init
+terraform plan
+terraform apply -auto-approve=true
+```
+![apply success in dev](./screenshots/tf_modules-apply-complete-in-dev.png)
+```bash
+kubectl get pods,svc,ingress -n default | grep "demo-app-dev"
+```
+![check resources in dev](./screenshots/tf-modules_check-dev-resources-in-k8s.png)
+```bash
+kubectl port-forward service/traefik 8080:80 -n kube-system
+curl -H "Host: dev.demo.local" http://localhost:8080
+```
+![curl dev](./screenshots/tf-modules_curl-dev.png)
+```bash
+terraform destroy -auto-approve=true
+```
+
 
 
 #### Triển khai module đó trên môi trường stg
@@ -72,42 +56,26 @@ Các file cấu hình:
 - [outputs.tf](envs/stg/outputs.tf): Cấu hình hiển thị các giá trị Output Values nhận về từ Module `k8s-app` sau khi triển khai môi trường Staging.
 
 Các bước:
-1. Di chuyển vào folder môi trường stg:
-   ```bash
-   cd envs/stg
-   ```
-2. Khởi tạo Terraform để chuẩn bị các Provider và Module:
-   ```bash
-   terraform init
-   ```
-3. Xem kế hoạch triển khai tài nguyên hạ tầng:
-   ```bash
-   terraform plan
-   ```
-4. Áp dụng cấu hình để tạo các tài nguyên lên Cluster:
-   ```bash
-   terraform apply -auto-approve=true
-   ```
-   ![apply success in stg](./screenshots/tf-modules_apply-complete-in-stg.png)
-5. Kiểm tra lại các tài nguyên đã được tạo trên Cluster Kubernetes:
-   ```bash
-   kubectl get pods,svc,ingress -n default | grep "demo-app-stg"
-   ```
-   ![check resources in stg](./screenshots/tf-modules_check-stg-resoures-in-k8s.png)
-6. Kiểm tra khả năng truy cập ứng dụng qua Ingress:
-   - Thực hiện port-forward service của Ingress Controller khi chưa map port ra ngoài:
-     ```bash
-     kubectl port-forward service/traefik 8080:80 -n kube-system
-     ```
-   - Chạy lệnh `curl` giả lập Header Host để kiểm tra:
-     ```bash
-     curl -H "Host: stg.demo.local" http://localhost:8080
-     ```
-     ![curl stg](./screenshots/tf-modules_curl-stg.png)
-7. Dọn dẹp các tài nguyên đã triển khai:
-   ```bash
-   terraform destroy -auto-approve=true
-   ```
+```bash
+cd envs/stg
+terraform init
+terraform plan
+terraform apply -auto-approve=true
+```
+![apply success in stg](./screenshots/tf-modules_apply-complete-in-stg.png)
+```bash
+kubectl get pods,svc,ingress -n default | grep "demo-app-stg"
+```
+![check resources in stg](./screenshots/tf-modules_check-stg-resoures-in-k8s.png)
+```bash
+kubectl port-forward service/traefik 8080:80 -n kube-system
+curl -H "Host: stg.demo.local" http://localhost:8080
+```
+![curl stg](./screenshots/tf-modules_curl-stg.png)
+```bash
+terraform destroy -auto-approve=true
+```
+
 
 ### Remote Backend (S3 + DynamoDB)
 #### Cấu hình lưu trữ State từ xa và kiểm tra cơ chế Lock State
@@ -124,21 +92,20 @@ Các bước:
      }
    }
    ```
-2. Thực hiện khởi tạo và di chuyển dữ liệu State lên S3 Bucket:
-   ```bash
-   terraform init -migrate-state
-   ```
-3. Kiểm tra cơ chế Lock bằng cách chạy song song hai Terminal:
-   - Tại Terminal 1, chạy lệnh apply nhưng dừng ở bước chờ xác nhận:
-     ```bash
-     terraform apply
-     ```
-   - Tại Terminal 2, chạy lệnh plan:
-     ```bash
-     terraform plan
-     ```
-   - Lệnh ở Terminal 2 thất bại do file State đang bị khóa bởi tiến trình ở Terminal 1:
-     ![lock failed](./screenshots/remote-backend_plan-failed-bcz-cannot-aquire-the-state-lock.png)
+Các bước:
+```bash
+terraform init -migrate-state
+```
+Để kiểm tra cơ chế Lock, tại Terminal 1 ta chạy:
+```bash
+terraform apply
+```
+Tại Terminal 2 ta chạy lệnh plan sẽ báo lỗi do file State bị khóa:
+```bash
+terraform plan
+```
+![lock failed](./screenshots/remote-backend_plan-failed-bcz-cannot-aquire-the-state-lock.png)
+
 
 ### Module network, compute reuse cho 2 env
 #### Tạo các module có tên `network` và `compute`
@@ -157,28 +124,18 @@ Các file cấu hình:
 - [outputs.tf](envs_2/dev/outputs.tf): Hiển thị thông số VPC ID và địa chỉ IP công cộng của máy chủ Dev sau khi khởi tạo thành công.
 
 Các bước:
-1. Di chuyển vào folder môi trường dev:
-   ```bash
-   cd envs_2/dev
-   ```
-2. Khởi tạo cấu hình Terraform:
-   ```bash
-   terraform init
-   ```
-3. Xem kế hoạch triển khai tài nguyên:
-   ```bash
-   terraform plan
-   ```
-4. Áp dụng cấu hình để triển khai tài nguyên lên AWS:
-   ```bash
-   terraform apply -auto-approve=true
-   curl -I http://18.138.254.36
-   ```
-   ![](./screenshots/network-compute_apply-in-dev.png)
-5. Khi không còn sử dụng, dọn dẹp các tài nguyên đã tạo:
-   ```bash
-   terraform destroy -auto-approve=true
-   ```
+```bash
+cd envs_2/dev
+terraform init
+terraform plan
+terraform apply -auto-approve=true
+curl -I http://18.138.254.36
+```
+![](./screenshots/network-compute_apply-in-dev.png)
+```bash
+terraform destroy -auto-approve=true
+```
+
 
 #### Triển khai trên môi trường stg
 Các file cấu hình:
@@ -186,28 +143,56 @@ Các file cấu hình:
 - [outputs.tf](envs_2/stg/outputs.tf): Hiển thị thông số VPC ID và địa chỉ IP công cộng của máy chủ Staging sau khi khởi tạo thành công.
 
 Các bước:
-1. Di chuyển vào folder môi trường stg:
-   ```bash
-   cd envs_2/stg
-   ```
-2. Khởi tạo cấu hình Terraform:
-   ```bash
-   terraform init
-   ```
-3. Xem kế hoạch triển khai tài nguyên:
-   ```bash
-   terraform plan
-   ```
-4. Áp dụng cấu hình để triển khai tài nguyên lên AWS:
-   ```bash
-   terraform apply -auto-approve=true
-   curl -I http://13.212.203.7
-   ```
-   ![](./screenshots/network-compute_apply-in-stg.png)
-5. Khi không còn sử dụng, dọn dẹp các tài nguyên đã tạo:
-   ```bash
-   terraform destroy -auto-approve=true
-   ```
+```bash
+cd envs_2/stg
+terraform init
+terraform plan
+terraform apply -auto-approve=true
+curl -I http://13.212.203.7
+```
+![](./screenshots/network-compute_apply-in-stg.png)
+```bash
+terraform destroy -auto-approve=true
+```
+
+
+### Terraform Workspaces
+#### Sử dụng Workspace quản lý môi trường Dev và Staging
+- [main.tf](workspaces_demo/main.tf): Cấu hình định nghĩa provider, sử dụng biến môi trường động `terraform.workspace` kết hợp với đối tượng `locals` để tự động điều chỉnh cấu hình theo môi trường được chọn.
+- [outputs.tf](workspaces_demo/outputs.tf): Cấu hình hiển thị thông tin workspace hiện tại và các giá trị đầu ra (như tên Service, tên miền Ingress) tương ứng với môi trường đang chạy.
+
+Các bước:
+```bash
+cd workspaces_demo
+terraform init
+terraform workspace show # chỉ có workspace default
+terraform workspace new dev
+terraform apply -auto-approve=true
+kubectl get pods,svc,ingress | grep "workspace-app-dev"
+```
+Chạy trên terminal 2
+```bash
+kubectl port-forward service/traefik 8080:80 -n kube-system
+```
+
+Quay về terminal 1
+```bash
+curl -H "Host: dev.demo.local" http://localhost:8080
+```
+![ket qua dev](./screenshots/workspaces_apply-curl-dev.png)
+```bash
+terraform workspace new stg
+terraform apply -auto-approve=true
+curl -H "Host: stg.demo.local" -I http://localhost:8080
+```
+![ket qua](./screenshots/workspaces_apply-curl-stg.png)
+```bash
+# xóa resources
+terraform destroy -auto-approve=true
+terraform workspace select dev
+terraform destroy -auto-approve=true
+```
+
 
 
 ## 3. Kết quả
