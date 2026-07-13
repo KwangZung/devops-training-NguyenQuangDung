@@ -70,9 +70,6 @@ resource "kubernetes_ingress_v1" "app" {
       app = var.app_name
       env = var.env
     }
-    annotations = {
-      "kubernetes.io/ingress.class" = "nginx"
-    }
   }
 
   spec {
