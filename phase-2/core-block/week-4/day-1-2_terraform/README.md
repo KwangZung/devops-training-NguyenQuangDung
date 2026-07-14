@@ -259,6 +259,37 @@ terraform destroy -auto-approve=true
 ```
 
 
+### terraform_remote_state
+#### App đọc giá trị Output từ file State của network
+- [network/main.tf](remote-state_demo/network/main.tf): Cấu hình khởi tạo VPC và Subnet, lưu file State trên S3 ở key `network/terraform.tfstate`.
+- [network/outputs.tf](remote-state_demo/network/outputs.tf): Khai báo xuất các giá trị đầu ra gồm VPC ID và Subnet ID để dự án khác có thể tham chiếu.
+- [app/main.tf](remote-state_demo/app/main.tf): Cấu hình triển khai máy chủ EC2, sử dụng Data Source `terraform_remote_state` để đọc thông tin Subnet ID trực tiếp từ S3 của dự án Network.
+- [app/outputs.tf](remote-state_demo/app/outputs.tf): Hiển thị ID của máy chủ EC2 sau khi khởi tạo thành công.
+
+Các bước:
+```bash
+cd remote-state_demo/network
+terraform init
+terraform apply -auto-approve=true
+```
+![subnet and vpc ids](./screenshots/remote-state_subnet-n-vpc-ids.png)
+```bash
+cd ../app
+terraform init
+terraform apply -auto-approve=true
+```
+![instance id](./screenshots/remote-state_instance-id.png)
+- Hai file State được lưu trữ riêng biệt trên S3 tương ứng với hai key `network/terraform.tfstate` và `app/terraform.tfstate`:
+![store tfstate in aws](./screenshots/remote-state_store-app-n-network-tfstate-in-aws.png)
+- Kiểm tra chi tiết máy chủ EC2 đã được tạo thành công trong đúng VPC và Subnet của dự án Network:
+![instance created in subnet and vpc](./screenshots/remote-state_instance-created-in-subnet-and-vpc.png)
+```bash
+terraform destroy -auto-approve=true
+cd ../network
+terraform destroy -auto-approve=true
+```
+
+
 ## 3. Kết quả
 
 ## 4. Khó khăn & cách giải quyết

@@ -91,21 +91,36 @@ Ta có thể sử dụng biến môi trường nội bộ `terraform.workspace` 
 
 ### 2. Dependency Graph và Dependency Lock File
 
-#### Dependency Graph
-- Terraform là một công cụ khai báo (declarative tool), nghĩa là ta chỉ cần khai báo trạng thái mong muốn của hạ tầng, còn Terraform sẽ tự tính toán các bước thực hiện.
-- Để làm được điều này, Terraform phân tích toàn bộ mã nguồn cấu hình để xây dựng một sơ đồ phụ thuộc dưới dạng đồ thị có hướng không chu trình (Directed Acyclic Graph - DAG).
-- Nhờ đồ thị này, Terraform xác định được thứ tự tạo tài nguyên chuẩn xác và có khả năng chạy song song nhiều tài nguyên không phụ thuộc nhau để tăng tốc độ triển khai hạ tầng.
+Hai khái niệm này đều chứa chữ *dependency* nhưng giải quyết hai vấn đề khác nhau. *Dependency graph* mô tả quan hệ phụ thuộc giữa các *resource* trong cấu hình để Terraform biết thứ tự plan, apply và destroy. *Dependency lock file* (file `.terraform.lock.hcl`) ghi nhớ phiên bản *provider* đã chọn cùng checksum, để mọi máy và môi trường CI cài đúng plugin đó khi chạy `terraform init`.
 
-#### Phân loại Dependency trong cấu hình
-- **Implicit Dependency**: Sự phụ thuộc ngầm định được thiết lập khi một tài nguyên tham chiếu đến một thuộc tính của tài nguyên khác. Terraform sẽ tự động nhận diện mối quan hệ này và tạo tài nguyên bị tham chiếu trước.
-- **Explicit Dependency**: Sự phụ thuộc tường minh được định nghĩa thủ công thông qua tham số `depends_on`. Bạn chỉ nên dùng tham số này khi có những mối liên hệ logic ẩn giữa các tài nguyên mà Terraform không thể tự phân tích qua việc tham chiếu thuộc tính thông thường.
+#### Dependency Graph
+Terraform là công cụ mang tính *declarative*, nghĩa là người dùng khai báo trạng thái mong muốn của hạ tầng còn Terraform tự suy ra các bước thực hiện. Để làm được điều đó, Terraform phân tích cấu hình và xây dựng *dependency graph* dưới dạng *DAG* (*directed acyclic graph*, nghĩa là đồ thị có hướng không chu trình). Đồ thị này phục vụ lập plan, làm mới state và áp dụng thay đổi; đồng thời cho phép chạy song song các *resource* không phụ thuộc lẫn nhau.
+
+Các loại nút thường gặp trên đồ thị gồm *resource node* (một *resource*, hoặc từng phần tử khi dùng `count`), *provider configuration node* (thời điểm cấu hình xong *provider*), và *resource meta-node* (nhóm *resource* khi `count` lớn hơn 1, chủ yếu để gộp phụ thuộc và hiển thị gọn). Lệnh `terraform graph` xuất đồ thị dạng DOT để quan sát các nút và cạnh phụ thuộc.
+
+Terraform dựng đồ thị qua nhiều bước tuần tự. Đầu tiên, hệ thống thêm các *resource node* từ cấu hình và gắn metadata từ plan hoặc state nếu có. Tiếp theo, các phụ thuộc tường minh từ `depends_on` tạo cạnh giữa các *resource*. Nếu state còn *resource* mà cấu hình đã xóa, *resource* đó được gọi là *orphan* và vẫn được đưa vào đồ thị để xử lý (thường là destroy), dù không còn cấu hình gắn kèm. Các *resource* phụ thuộc vào việc *provider* đã được cấu hình xong. Các tham chiếu thuộc tính (interpolation) tạo phụ thuộc ngầm từ *resource* đang dùng giá trị tới *resource* được tham chiếu. Terraform tạo một *root node* trỏ tới mọi *resource* để đồ thị có một gốc duy nhất; khi duyệt thì *root node* bị bỏ qua. Khi có diff destroy hoặc recreate, node có thể được tách thành node destroy và node create vì thứ tự destroy thường khác thứ tự create. Cuối cùng, đồ thị được kiểm tra không có chu trình và chỉ có một gốc.
+
+Khi duyệt đồ thị, Terraform dùng duyệt theo chiều sâu và xử lý song song: một node chạy ngay khi mọi dependency của nó đã xong. Mức song song bị giới hạn (mặc định tối đa 10 node đồng thời) để tránh quá tải máy chạy Terraform; có thể chỉnh bằng cờ `-parallelism` trên `plan`, `apply` và `destroy`. Việc chỉnh `-parallelism` là thao tác nâng cao, thường không cần trong sử dụng hàng ngày. Một số *provider* (ví dụ AWS) tự xử lý rate limit API bằng cơ chế backoff hoặc retry, nên Terraform không dùng `parallelism` để giải quyết rate limit trực tiếp.
+
+Trong lab thực hành, chuỗi `vpc` → `subnet` → `instance` minh họa create theo dependency và destroy theo chiều ngược lại. Ba *resource* độc lập minh họa parallelism mặc định so với `-parallelism=1`.
+
+#### Phân loại dependency trong cấu hình
+- *Implicit dependency*: phụ thuộc ngầm khi một *resource* tham chiếu thuộc tính của *resource* khác (ví dụ `triggers.parent = null_resource.vpc.id`). Terraform tự nhận diện và tạo *resource* được tham chiếu trước.
+- *Explicit dependency*: phụ thuộc tường minh khai báo bằng `depends_on`. Chỉ nên dùng khi có quan hệ logic ẩn (side effect, thứ tự bắt buộc) mà Terraform không suy ra được qua tham chiếu thuộc tính.
 
 #### Dependency Lock File
-- File `.terraform.lock.hcl` được sinh ra tự động khi chạy lệnh khởi tạo.
-- Nhiệm vụ của file này là ghi nhận chính xác phiên bản của các Provider plugin đã được tải về cùng với mã băm checksum tương ứng.
-- File lock này cần được commit lên Git để đảm bảo rằng khi một thành viên khác chạy lệnh khởi tạo trên máy của họ, hệ thống sẽ tải chính xác phiên bản Provider đó, tránh các lỗi phát sinh do sai lệch phiên bản.
+File `.terraform.lock.hcl` thuộc về *root module* (thư mục làm việc chứa các file `.tf` gốc), không thuộc từng *child module*. Terraform tự tạo hoặc cập nhật file này mỗi lần `terraform init`. File dùng cú pháp HCL nhưng không phải file cấu hình Terraform thông thường (đuôi `.hcl` thay vì `.tf`).
+
+Hiện tại lock file chỉ theo dõi dependency dạng *provider*. Terraform không khóa phiên bản *remote module*; muốn module cố định thì dùng *version constraint* chính xác. *Version constraint* trong cấu hình (ví dụ `~> 2.0`) xác định tập phiên bản được phép; sau khi chọn một phiên bản cụ thể, Terraform ghi vào lock (ví dụ `version = "2.38.0"`) để lần sau chọn y hệt.
+
+Khi `terraform init`, nếu *provider* chưa có trong lock thì Terraform chọn phiên bản mới nhất thỏa constraint rồi ghi lock. Nếu đã có lựa chọn trong lock thì Terraform luôn cài đúng phiên bản đó, kể cả khi registry đã có bản mới hơn. Muốn nâng cấp có chủ đích thì chạy `terraform init -upgrade` để bỏ qua lựa chọn cũ và chọn lại phiên bản mới nhất thỏa constraint. Mọi thay đổi lock nên được review và commit lên Git để team và CI dùng cùng phiên bản *provider*.
+
+Terraform còn kiểm tra checksum của gói *provider* so với các hash đã ghi trong lock (*trust on first use*, nghĩa là tin gói đã ghi nhận lần đầu và báo lỗi nếu lần sau không khớp). Trong file lock thường thấy tiền tố `zh:` (hash của gói zip trên registry) và `h1:` (hash theo nội dung package, scheme được ưu tiên hiện nay). Nếu cài *provider* lần đầu từ mirror hoặc chỉ trên một hệ điều hành, checksum các platform khác có thể thiếu; lệnh `terraform providers lock` với các cờ `-platform` giúp ghi sẵn hash cho nhiều platform trước khi đưa lên CI.
+
+Khi *provider* không còn xuất hiện trong cấu hình và state, Terraform (từ phiên bản 1.1) có thể gỡ entry tương ứng khỏi lock. Nếu sau đó thêm lại *provider* đó, hệ thống coi như *provider* mới và không nhất thiết chọn lại đúng phiên bản cũ.
 
 ---
+
 
 ### 3. Data Source `terraform_remote_state`
 
