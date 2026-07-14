@@ -79,13 +79,19 @@ docker run -d --name host3 -p 2223:22 -p 9090:9090 -p 3000:3000 -p 9100:9100 ras
 
 #### Bước B: Cấu hình các file liên quan
 - [inventory](inventory): Khai báo kết nối cho host3 (port 2223).
+- [group_vars/webservers/vault.yml](group_vars/webservers/vault.yml): File chứa mật khẩu kết nối VM đã được mã hóa bằng Ansible Vault.
 - [site_monitoring.yaml](site_monitoring.yaml): Playbook chính gọi Role monitoring.
 - [roles/monitoring/defaults/main.yaml](roles/monitoring/defaults/main.yaml): Khai báo URL tải Grafana deb.
 - [roles/monitoring/tasks/main.yaml](roles/monitoring/tasks/main.yaml): Các task cài đặt prometheus, prometheus-node-exporter, daemon, cài đặt Grafana và đảm bảo các service được bật.
 
 #### Bước C: Thực thi kịch bản
 ```bash
-ansible-playbook -i inventory site_monitoring.yaml
+# Mã hóa vault.yaml:
+ansible-vault encrypt group_vars/webservers/vault.yml
+```
+Kết quả: [vault.yaml](./group_vars/webservers/vault.yaml) đã được mã hóa
+```bash
+ansible-playbook -i inventory site_monitoring.yaml --ask-vault-pass # Nhập pass là ...
 ```
 
 #### Bước D: Lệnh kiểm tra trực quan

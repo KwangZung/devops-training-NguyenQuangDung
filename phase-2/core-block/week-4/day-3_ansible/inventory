@@ -5,6 +5,6 @@ host3 ansible_host=127.0.0.1 ansible_port=2223
 
 [webservers:vars]
 ansible_user=root
-ansible_password=root
+ansible_password="{{ vault_ansible_password }}"
 ansible_connection=ssh
 ansible_ssh_common_args='-o StrictHostKeyChecking=no'
