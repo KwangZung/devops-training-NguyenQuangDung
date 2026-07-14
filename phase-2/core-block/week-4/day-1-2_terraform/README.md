@@ -194,6 +194,70 @@ terraform destroy -auto-approve=true
 ```
 
 
+### Terraform Dependency Graph
+
+#### Implicit dependency
+- [main.tf](implicit-dependency_demo/main.tf): Chuỗi resource `vpc` → `subnet` → `instance`. `subnet` tham chiếu `null_resource.vpc.id` và `instance` tham chiếu `null_resource.subnet.id` nên Terraform tự suy ra cạnh phụ thuộc (không cần `depends_on`).
+
+Các bước:
+```bash
+cd implicit-dependency_demo
+terraform init
+terraform graph
+```
+![implicit dependency graph](./screenshots/graph_implicit-dependency.png)
+```bash
+terraform apply -auto-approve=true
+```
+Thứ tự create kết quả: `vpc` → `subnet` → `instance`.
+![implicit create order](./screenshots/graph_imp-dep-create-order.png)
+```bash
+terraform destroy -auto-approve=true
+```
+Thứ tự destroy kết quả (ngược create): `instance` → `subnet` → `vpc`.
+![implicit destroy order](./screenshots/graph_imp-dep-destroy-order.png)
+
+
+#### Explicit dependency
+- [main.tf](explicit-dependency_demo/main.tf): Giữ chuỗi implicit `vpc` → `subnet` → `instance`, thêm `sg` độc lập (không tham chiếu resource khác) và khai báo `depends_on = [null_resource.sg]` trên `instance` để instance chỉ chạy sau khi cả `subnet` và `sg` xong.
+
+Các bước:
+```bash
+cd explicit-dependency_demo
+terraform init
+terraform graph
+```
+![explicit dependency graph](./screenshots/graph_explicit-dependency.png)
+```bash
+terraform apply -auto-approve=true
+```
+kết quả: `vpc` và `sg` có thể tạo gần như song song; `subnet` sau `vpc`; `instance` sau cả `subnet` và `sg`.
+```bash
+terraform destroy -auto-approve=true
+```
+
+
+#### Parallelism
+- [main.tf](parralelism_demo/main.tf): Ba resource `a`, `b`, `c` độc lập (không tham chiếu lẫn nhau) để so sánh apply với parallelism mặc định và `-parallelism=1`.
+
+Các bước:
+```bash
+cd parralelism_demo
+terraform init
+terraform apply -auto-approve=true
+```
+Với parallelism mặc định (tối đa 10), A/B/C thường start gần như cùng lúc (tổng thời gian ~5s).
+![parallelism apply](./screenshots/graph_parralelism-apply.png)
+```bash
+terraform destroy -auto-approve=true
+terraform apply -auto-approve=true -parallelism=1
+```
+Với `-parallelism=1`, A/B/C chạy tuần tự (tổng thời gian ~15s).
+![no parallelism apply](./screenshots/graph_no-parralelism-apply.png)
+```bash
+terraform destroy -auto-approve=true
+```
+
 
 ## 3. Kết quả
 
