@@ -1,0 +1,35 @@
+- name: Install Prometheus, Node Exporter, and Daemon package từ apt
+  apt:
+    name:
+      - prometheus
+      - prometheus-node-exporter
+      - daemon
+    state: present
+    update_cache: yes
+
+- name: Download Grafana (.deb)
+  get_url:
+    url: "{{ grafana_deb_url }}"
+    dest: "{{ grafana_deb_path }}"
+    mode: '0644'
+
+- name: Install Grafana from file deb
+  apt:
+    deb: "{{ grafana_deb_path }}"
+    state: present
+
+- name: Ensure prometheus services are enabled and running
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  loop:
+    - prometheus-node-exporter
+    - prometheus
+
+- name: Ensure grafana-server is enabled and running (ignore first-run migration timeout)
+  service:
+    name: grafana-server
+    state: started
+    enabled: yes
+  ignore_errors: yes
