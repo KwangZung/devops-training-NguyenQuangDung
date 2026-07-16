@@ -6,9 +6,9 @@ Tài liệu này hướng dẫn chi tiết các bước triển khai hệ thốn
 
 - **Intern**: Nguyễn Quang Dũng
 - **Phase / Week / Day**: Phase 2 / Week 4 / Day 4
-- **Branch**: `phase-2/week-4/day-4_kube-prometheus-stack`
-- **Submitted at**: [Điền ngày giờ nộp bài]
-- **Time spent**: [Điền thời gian thực hiện]
+- **Branch**: `phase-2/week-4/day-4`
+- **Submitted at**: 2026-07-16 22:30
+- **Time spent**: 8h
 
 ---
 
