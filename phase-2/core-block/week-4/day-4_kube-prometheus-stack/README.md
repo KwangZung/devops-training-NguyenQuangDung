@@ -1,6 +1,6 @@
-# Hướng dẫn và Báo cáo Thực hành Day 4: kube-prometheus-stack
+# Hướng dẫn Triển khai và Báo cáo Thực hành Day 4: kube-prometheus-stack trên K3d (WSL2)
 
-Tài liệu này chứa hướng dẫn chi tiết các bước thực hành giám sát và thu thập log trong Kubernetes Cluster bằng Helm, đồng thời là mẫu báo cáo nộp bài của Day 4.
+Tài liệu này hướng dẫn chi tiết các bước triển khai hệ thống giám sát và quản lý log tập trung sử dụng K3d trên môi trường WSL2, bao gồm các bước cấu hình tối ưu hóa hệ thống để xử lý lỗi inotify và lỗi nghẽn mạng tải image.
 
 ## Thông tin nộp bài
 
@@ -12,94 +12,123 @@ Tài liệu này chứa hướng dẫn chi tiết các bước thực hành giá
 
 ---
 
-## Mục tiêu bài thực hành
+## 1. Mục tiêu
 
-- Cài đặt thành công kube-prometheus-stack và Loki trên Kubernetes Cluster bằng Helm.
-- Cấu hình expose giao diện Grafana ra ngoài thông qua Ingress.
-- Import thành công Dashboard ID 1860 phục vụ việc giám sát tài nguyên Node.
+- Cài đặt thành công kube-prometheus-stack và Loki trên cụm K3d bằng Helm.
+- Khắc phục các lỗi inotify trên WSL2 và lỗi nghẽn mạng kéo image từ registry ngoại.
+- Cấu hình expose giao diện Grafana ra ngoài thông qua Traefik Ingress tích hợp sẵn của K3s/K3d trên cổng 8081.
+- Import thành công Dashboard giám sát tài nguyên Node.
 - Thiết lập luật cảnh báo PrometheusRule phát hiện Pod restart nhiều lần.
 - Kiểm tra tính đúng đắn của cảnh báo bằng cách giả lập sự cố.
 
 ---
 
-## Hướng dẫn các bước thực hiện
+## 2. Cách chạy
 
-### Bước 1: Chuẩn bị môi trường và Helm
+### Bước 1: Dọn dẹp tài nguyên cũ và cấu hình hệ thống host WSL2
 
-Ta cần đảm bảo đã chạy cụm Kubernetes local (như Minikube hoặc Kind) và cài đặt sẵn công cụ Helm.
-
-1. Khởi động cụm Kubernetes. Nếu dùng Minikube, ta cần bật tính năng Ingress:
+1. Dừng stack Docker Compose của Phase 1 để giải phóng tài nguyên:
    ```bash
-   minikube start
-   minikube addons enable ingress
+   cd ~/devops-training-NguyenQuangDung/Week2/Day10-Observability
+   docker compose down
    ```
-2. Thêm các Helm repositories cần thiết và cập nhật:
+2. Khắc phục lỗi inotify (lỗi `failed to make file target manager: too many open files` của Promtail và Loki) bằng cách tăng giới hạn theo dõi file của nhân Linux trên WSL2.
+   - Mở file cấu hình sysctl:
+     ```bash
+     sudo nano /etc/sysctl.conf
+     ```
+   - Thêm các cấu hình sau vào cuối file:
+     ```text
+     fs.inotify.max_user_instances=512
+     fs.inotify.max_user_watches=524288
+     fs.inotify.max_queued_events=16384
+     ```
+   - Nạp lại cấu hình:
+     ```bash
+     sudo sysctl -p
+     ```
+
+### Bước 2: Thiết lập Kubeconfig và xử lý cache Image cho cụm K3d
+
+
+1. Thiết lập Kubeconfig để kubectl và Helm kết nối tới cụm K3d tên `dev`:
+   ```bash
+   mkdir -p ~/.kube
+   k3d kubeconfig get dev > ~/.kube/config
+   chmod 600 ~/.kube/config
+   ```
+2. Kiểm tra kết nối cụm:
+   ```bash
+   kubectl get nodes
+   ```
+3. Kéo các image bị nghẽn mạng về máy host:
+   ```bash
+   docker pull quay.io/prometheus-operator/prometheus-config-reloader:v0.92.1
+   docker pull quay.io/prometheus/prometheus:v3.13.1-distroless
+   ```
+4. Nạp trực tiếp các image này vào cụm K3d `dev` để tránh tải qua mạng:
+   ```bash
+   k3d image import quay.io/prometheus-operator/prometheus-config-reloader:v0.92.1 -c dev
+   k3d image import quay.io/prometheus/prometheus:v3.13.1-distroless -c dev
+   ```
+
+### Bước 3: Cấu hình và cài đặt stack giám sát bằng Helm
+
+1. Thêm các Helm repositories cần thiết:
    ```bash
    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
    helm repo add grafana https://grafana.github.io/helm-charts
    helm repo update
    ```
-
-### Bước 2: Cấu hình và Cài đặt kube-prometheus-stack
-
-Để dễ dàng quản lý cấu hình Grafana và các thành phần khác, ta sẽ tạo một file cấu hình custom values.
-
-1. Tạo file `values.yaml` với nội dung cơ bản để cấu hình Grafana admin password và tự động import Dashboard:
+2. Tạo file cấu hình [`values.yaml`](values.yaml) cho kube-prometheus-stack để định nghĩa mật khẩu admin của Grafana và cấu hình Traefik Ingress:
    ```yaml
    grafana:
      adminPassword: "admin"
      ingress:
        enabled: true
+       ingressClassName: traefik
        hosts:
          - grafana.local
    ```
-2. Tạo Namespace riêng cho việc monitoring:
+3. Tạo Namespace riêng cho việc monitoring và cài đặt kube-prometheus-stack:
    ```bash
    kubectl create namespace monitoring
-   ```
-3. Cài đặt kube-prometheus-stack bằng Helm sử dụng file values vừa tạo:
-   ```bash
    helm install prometheus-stack prometheus-community/kube-prometheus-stack -n monitoring -f values.yaml
    ```
-
-### Bước 3: Cài đặt Loki và Agent thu thập Log
-
-Ta sẽ cài đặt Loki làm hệ thống quản lý log tập trung cùng Promtail (hoặc Grafana Alloy) để gửi log từ các container tới Loki.
-
-1. Cài đặt Loki bằng Helm:
-   ```bash
-   helm install loki grafana/loki-simple-scalable -n monitoring
-   ```
-2. Cài đặt Promtail để thu thập log từ các Node và container gửi về Loki:
-   ```bash
-   helm install promtail grafana/promtail --set config.clients[0].url=http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push -n monitoring
-   ```
-3. Cấu hình Data Source Loki trên giao diện Grafana sau khi cài đặt thành công.
-
-### Bước 4: Expose Grafana qua Ingress và Kiểm tra
-
-1. Để truy cập Grafana qua tên miền `grafana.local`, ta cần trỏ tên miền này về IP của Ingress Controller.
-   - Lấy IP của Ingress:
+4. Triển khai Loki và Promtail để thu thập log:
+   - Cài đặt Loki:
      ```bash
-     kubectl get ingress -n monitoring
+     helm install loki grafana/loki-simple-scalable -n monitoring
      ```
-   - Thêm dòng cấu hình vào file hosts trên máy (nếu chạy Windows, chỉnh sửa file `C:\Windows\System32\drivers\etc\hosts` bằng quyền Administrator):
-     ```text
-     <IP_CUA_INGRESS> grafana.local
+   - Cài đặt Promtail và cấu hình endpoint gửi log về Loki Gateway:
+     ```bash
+     helm install promtail grafana/promtail --set config.clients[0].url=http://loki-gateway.monitoring.svc.cluster.local/loki/api/v1/push -n monitoring
      ```
-2. Truy cập địa chỉ `http://grafana.local` trên trình duyệt để kiểm tra giao diện Grafana. Đăng nhập bằng tài khoản `admin` và mật khẩu đã cấu hình trong file `values.yaml`.
 
-### Bước 5: Import Dashboard và Kiểm tra Metrics
+### Bước 4: Cấu hình DNS và truy cập Grafana
 
-1. Trong giao diện Grafana, truy cập Dashboards -> New -> Import.
-2. Nhập ID `1860` (Node Exporter Full) và chọn Data Source là Prometheus.
-3. Kiểm tra xem các biểu đồ về CPU, RAM, Disk của các Node đã hiển thị dữ liệu đầy đủ chưa.
+1. Ánh xạ tên miền `grafana.local` về IP localhost của host trên Windows bằng cách Mở file `C:\Windows\System32\drivers\etc\hosts` bằng quyền Administrator và thêm dòng sau:
+   ```text
+   127.0.0.1 grafana.local
+   ```
+2. Do cụm K3d map cổng 80 của Ingress Traefik ra cổng 8081 của host, ta truy cập Grafana qua địa chỉ:
+   ```text
+   http://grafana.local:8081
+   ```
+   Đăng nhập bằng tài khoản `admin` và mật khẩu `admin`.
+   ![](./screenshots/grafana-ui.png)
 
-### Bước 6: Tạo PrometheusRule cảnh báo Pod restart nhiều lần
+### Bước 5: Cấu hình Dashboard và Kiểm tra log
 
-Ta sẽ tạo một cảnh báo tự động phát hiện nếu có một container trong Pod bị restart quá 3 lần trong vòng 10 phút.
+1. Truy cập Dashboards -> New -> Import trên Grafana.
+2. Nhập ID `11074` (hoặc sử dụng các dashboard mặc định của stack) để import giao diện giám sát Node. Chọn data source là **Prometheus**.
+3. Vào mục Explore, chọn data source là **Loki** để kiểm tra log hệ thống đã được thu thập đầy đủ.
 
-1. Tạo file `alert-rules.yaml` với nội dung khai báo tài nguyên Custom Resource `PrometheusRule`:
+### Bước 6: Tạo PrometheusRule cảnh báo Pod restart
+
+Ta định nghĩa một cảnh báo tự động kích hoạt nếu một container trong Pod bị restart quá 3 lần trong vòng 10 phút.
+
+1. Tạo file [`alert-rules.yaml`](alert-rules.yaml):
    ```yaml
    apiVersion: monitoring.coreos.com/v1
    kind: PrometheusRule
@@ -121,17 +150,14 @@ Ta sẽ tạo một cảnh báo tự động phát hiện nếu có một contai
            summary: "Pod {{ $labels.pod }} container {{ $labels.container }} restarted too many times"
            description: "Container has restarted {{ $value }} times within the last 10 minutes."
    ```
-2. Apply file cấu hình trên vào cụm Kubernetes:
+2. Áp dụng rule cấu hình vào cụm:
    ```bash
    kubectl apply -f alert-rules.yaml
    ```
-3. Truy cập vào giao diện Prometheus (hoặc mục Alerts trên Grafana) để kiểm tra xem rule mới đã được nạp thành công chưa.
 
-### Bước 7: Kiểm tra cảnh báo bằng cách giả lập sự cố
+### Bước 7: Giả lập sự cố kiểm tra cảnh báo
 
-Ta sẽ tạo một Pod bị lỗi liên tục để kích hoạt cảnh báo hoạt động.
-
-1. Tạo file `crash-pod.yaml` chạy một container liên tục exit để tạo trạng thái CrashLoopBackOff:
+1. Tạo file [`crash-pod.yaml`](crash-pod.yaml) chạy một container liên tục exit để giả lập lỗi:
    ```yaml
    apiVersion: v1
    kind: Pod
@@ -144,38 +170,11 @@ Ta sẽ tạo một Pod bị lỗi liên tục để kích hoạt cảnh báo ho
        image: busybox
        command: ["/bin/sh", "-c", "exit 1"]
    ```
-2. Deploy Pod này:
+2. Triển khai Pod:
    ```bash
    kubectl apply -f crash-pod.yaml
    ```
-3. Chờ khoảng 5-10 phút để container bị restart nhiều hơn 3 lần. Theo dõi trạng thái restart của Pod qua lệnh:
-   ```bash
-   kubectl get pods -w
-   ```
-4. Kiểm tra trên giao diện Alerts của Prometheus hoặc Alertmanager để xác nhận cảnh báo `PodRestartTooMany` đã chuyển sang trạng thái firing. Chụp ảnh màn hình làm báo cáo.
+   ![](./screenshots/crash-pod_crashed_3_times.png)
+3. Chờ container bị restart nhiều hơn 3 lần, sau đó kiểm tra trên giao diện Alerts của Prometheus hoặc Alertmanager để xác nhận cảnh báo `PodRestartTooMany` chuyển sang trạng thái firing.
+   ![](./screenshots/alert-pod-restart-too-many.png)
 
----
-
-## Báo cáo Kết quả Thực hành của bệ hạ
-
-*Bệ hạ vui lòng cập nhật kết quả thực hiện vào các mục dưới đây sau khi hoàn thành các bước.*
-
-### 1. Kết quả Cài đặt Stack
-- Lệnh chạy thực tế:
-- Ảnh chụp danh sách các Pod đang chạy trong namespace `monitoring` (sử dụng lệnh `kubectl get pods -n monitoring`):
-
-### 2. Cấu hình Ingress và Expose Grafana
-- Nội dung file Ingress YAML hoặc phần cấu hình Ingress trong values.yaml:
-- Ảnh chụp màn hình đăng nhập thành công vào Grafana qua tên miền `grafana.local`:
-
-### 3. Trực quan hóa dữ liệu (Dashboard)
-- Ảnh chụp màn hình Dashboard ID `1860` (Node Exporter Full) hiển thị đầy đủ thông số của cụm Kubernetes:
-- Ảnh chụp màn hình giao diện Explore trong Grafana truy vấn thành công log từ Loki:
-
-### 4. Cảnh báo PrometheusRule & Giả lập sự cố
-- Lệnh apply rule cảnh báo:
-- Ảnh chụp danh sách các rule cảnh báo trên giao diện Prometheus/Grafana cho thấy rule `PodRestartTooMany` đã được nhận diện:
-- Ảnh chụp màn hình giao diện Alertmanager hoặc Grafana cho thấy cảnh báo `PodRestartTooMany` đang ở trạng thái firing khi giả lập Pod bị lỗi:
-
-### 5. Khó khăn gặp phải và Cách giải quyết
-- *Mô tả các lỗi gặp phải trong quá trình cài đặt, expose Ingress hoặc cấu hình Loki và cách bệ hạ xử lý.*
