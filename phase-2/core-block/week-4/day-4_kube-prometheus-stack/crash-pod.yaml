@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: crash-pod
+  namespace: default
+spec:
+  containers:
+  - name: crash-container
+    image: busybox
+    command: ["/bin/sh", "-c", "exit 1"]

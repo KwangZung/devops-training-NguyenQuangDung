@@ -10,7 +10,7 @@ terraform {
   backend "s3" {
     bucket       = "dungnq-terraform-states"
     key          = "dev/terraform.tfstate"
-    region       = "ap-southeast-2"
+    region       = "ap-southeast-1"
     use_lockfile = true
     encrypt      = true
   }
