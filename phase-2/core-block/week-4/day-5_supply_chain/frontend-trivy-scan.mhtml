@@ -1,0 +1,89 @@
+From: <Saved by Blink>
+Snapshot-Content-Location: file:///C:/Users/yungn/AppData/Local/Temp/12a2a823-da12-44da-a8b6-256dd6f5e265_Trivy-Report-frontend.zip.265/trivy-results-frontend.html
+Subject: ghcr.io/kwangzung/volunteer-hub/volunteerhub-frontend:1368716ad12f6b3c58fa45131b33ba9e324bb565 (alpine 3.24.1) - Trivy Report - 2026-07-24 02:32:26.521770787 +0000 UTC m=+3.168962317
+Date: Fri, 24 Jul 2026 09:38:28 +0700
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----MultipartBoundary--V28jOXevNaCHZlSC3nxMU7V0O6B3Ol4s6Wz25eNBu2----"
+
+
+------MultipartBoundary--V28jOXevNaCHZlSC3nxMU7V0O6B3Ol4s6Wz25eNBu2----
+Content-Type: text/html
+Content-ID: <frame-33FD71902185F449704D7776F3DFF287@mhtml.blink>
+Content-Transfer-Encoding: quoted-printable
+Content-Location: file:///C:/Users/yungn/AppData/Local/Temp/12a2a823-da12-44da-a8b6-256dd6f5e265_Trivy-Report-frontend.zip.265/trivy-results-frontend.html
+
+<!DOCTYPE html><html><head><meta http-equiv=3D"Content-Type" content=3D"tex=
+t/html; charset=3DUTF-8"><link rel=3D"stylesheet" type=3D"text/css" href=3D=
+"cid:css-3be5573a-818c-4ada-87c2-c137093864b4@mhtml.blink" />
+   =20
+   =20
+    <title>ghcr.io/kwangzung/volunteer-hub/volunteerhub-frontend:1368716ad1=
+2f6b3c58fa45131b33ba9e324bb565 (alpine 3.24.1) - Trivy Report - 2026-07-24 =
+02:32:26.521770787 +0000 UTC m=3D+3.168962317 </title>
+   =20
+  </head>
+  <body>
+    <h1>ghcr.io/kwangzung/volunteer-hub/volunteerhub-frontend:1368716ad12f6=
+b3c58fa45131b33ba9e324bb565 (alpine 3.24.1) - Trivy Report - 2026-07-24 02:=
+32:26.521790604 +0000 UTC m=3D+3.168982124</h1>
+    <table>
+      <tbody><tr class=3D"group-header"><th colspan=3D"6">alpine</th></tr>
+      <tr><th colspan=3D"6">No Vulnerabilities found</th></tr>
+      <tr><th colspan=3D"6">No Misconfigurations found</th></tr>
+    </tbody></table>
+ =20
+
+</body></html>
+------MultipartBoundary--V28jOXevNaCHZlSC3nxMU7V0O6B3Ol4s6Wz25eNBu2----
+Content-Type: text/css
+Content-Transfer-Encoding: quoted-printable
+Content-Location: cid:css-3be5573a-818c-4ada-87c2-c137093864b4@mhtml.blink
+
+@charset "utf-8";
+
+* { font-family: Arial, Helvetica, sans-serif; }
+
+h1 { text-align: center; }
+
+.group-header th { font-size: 200%; }
+
+.sub-header th { font-size: 150%; }
+
+table, th, td { border: 1px solid black; border-collapse: collapse; white-s=
+pace: nowrap; padding: 0.3em; }
+
+table { margin: 0px auto; }
+
+.severity { text-align: center; font-weight: bold; color: rgb(250, 250, 250=
+); }
+
+.severity-LOW .severity { background-color: rgb(95, 187, 49); }
+
+.severity-MEDIUM .severity { background-color: rgb(233, 198, 0); }
+
+.severity-HIGH .severity { background-color: rgb(255, 136, 0); }
+
+.severity-CRITICAL .severity { background-color: rgb(228, 0, 0); }
+
+.severity-UNKNOWN .severity { background-color: rgb(116, 116, 116); }
+
+.severity-LOW { background-color: rgba(95, 187, 49, 0.376); }
+
+.severity-MEDIUM { background-color: rgba(233, 198, 0, 0.376); }
+
+.severity-HIGH { background-color: rgba(255, 136, 0, 0.376); }
+
+.severity-CRITICAL { background-color: rgba(228, 0, 0, 0.376); }
+
+.severity-UNKNOWN { background-color: rgba(116, 116, 116, 0.376); }
+
+table tr td:first-of-type { font-weight: bold; }
+
+.links a, .links[data-more-links=3D"on"] a { display: block; }
+
+.links[data-more-links=3D"off"] a:nth-of-type(n+5) { display: none; }
+
+a.toggle-more-links { cursor: pointer; }
+------MultipartBoundary--V28jOXevNaCHZlSC3nxMU7V0O6B3Ol4s6Wz25eNBu2------
