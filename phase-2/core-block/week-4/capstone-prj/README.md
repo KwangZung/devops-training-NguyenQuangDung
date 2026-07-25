@@ -89,6 +89,8 @@ git push
 ```
 - Mở tab **Actions** trên GitHub để theo dõi quy trình Build, Scan, Sign, và Push image lên GHCR.
 
+![CI Pipeline on GitHub Actions Success](./screenshots/ci-pipeline-on-github-actions-success.png)
+
 ### Bước 3: Đồng bộ trạng thái bằng ArgoCD (GitOps)
 - Hệ thống ArgoCD trong K8s được cấu hình để theo dõi thư mục `charts/volunteerhub`.
 - Sau khi code trên GitHub được cập nhật, ArgoCD sẽ tự động áp dụng (Sync) Helm Chart xuống K8s.
@@ -97,6 +99,10 @@ git push
 kubectl rollout restart deployment volunteerhub-backend -n volunteerhub-prod
 kubectl rollout restart deployment volunteerhub-frontend -n volunteerhub-prod
 ```
+
+![ArgoCD UI](./screenshots/argo-ui.png)
+
+![ArgoCD K8s Clusters Diagram](./screenshots/argo-ui-k8s-clusters-diagram.png)
 
 ### Bước 4: Truy cập Ứng dụng
 Mở trình duyệt truy cập vào địa chỉ:
@@ -107,11 +113,16 @@ Mở trình duyệt truy cập vào địa chỉ:
 
 *(Nhớ **Ctrl + F5** hoặc xóa bộ nhớ đệm trình duyệt nếu truy cập lần đầu sau khi cập nhật giao diện).*
 
+![VolunteerHub UI](./screenshots/volunteerhub-ui.png)
 ---
 
 ## 4. Kết quả
 - Hệ thống có khả năng tự động hóa 100% quá trình cập nhật mã nguồn lên môi trường K8s nội bộ.
 - Loại bỏ hoàn toàn lỗi hardcode `localhost:5000`, tăng tính bảo mật và khả năng mở rộng.
+
+**Video chạy thử nghiệm (Demo):**
+
+[Demo Video](./screenshots/demo-video.mkv)
 
 ## 5. Khó khăn & cách giải quyết
 - **Lỗi Frontend hard-code URL tuyệt đối**: Chức năng Google Auth và các trang gọi API liên tục báo lỗi do trình duyệt cố gọi tới `localhost:5000`. Cố gắng tiêm biến môi trường `.env` qua K8s không thành công vì GitHub Actions build code mà không có `.env` (file này nằm trong `.gitignore`).
