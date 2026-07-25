@@ -63,7 +63,7 @@ Toàn bộ các file `.yaml` kể trên được quản lý tập trung và phâ
 - [`.github/workflows/supply-chain.yml`](https://github.com/KwangZung/volunteer-hub/tree/main/.github/workflows/supply-chain.yml): Luồng GitHub Actions kích hoạt khi có code đẩy lên nhánh `main`. Pipeline này thực hiện: Build Docker Image, quét lỗ hổng bằng **Trivy**, trích xuất SBOM bằng **Syft**, ký điện tử bằng **Cosign** (Keyless), và đẩy lên GHCR.
 
 ### 3.8. GitOps (CD Pipeline)
-- [`charts/argocd-app.yaml`](https://github.com/KwangZung/volunteer-hub/tree/main/charts/argocd-app.yaml): Cấu hình Application cho ArgoCD. ArgoCD sẽ "giám sát" thư mục `charts/volunteerhub` trên repo GitHub và tự động đồng bộ (Sync) mọi thay đổi xuống K8s cluster.
+- [`infra/argocd-app.yaml`](https://github.com/KwangZung/volunteer-hub/tree/main/infra/argocd-app.yaml): Cấu hình Application cho ArgoCD. ArgoCD sẽ "giám sát" thư mục `charts/volunteerhub` trên repo GitHub và tự động đồng bộ (Sync) mọi thay đổi xuống K8s cluster.
 
 ### 3.9. Cẩm nang vận hành (Runbook)
 - [`RUNBOOK.md`](https://github.com/KwangZung/volunteer-hub/tree/main/RUNBOOK.md): Hướng dẫn đội ngũ vận hành phản ứng, debug và khắc phục khi hệ thống gặp sự cố.
@@ -124,7 +124,7 @@ cd infra/
 terraform destroy --auto-approve
 
 # Xóa cấu hình ArgoCD (Tùy chọn)
-kubectl delete -f ../charts/argocd-app.yaml
+kubectl delete -f argocd-app.yaml
 ```
 
 *(Lưu ý: Hành động xóa Namespace `volunteerhub-prod` bằng Terraform sẽ làm K8s tự động dọn dẹp toàn bộ các Pod, Service, Ingress và PVC nằm bên trong nó)*
