@@ -125,6 +125,9 @@ kubectl delete -f infra/argocd-app.yaml
 
 cd infra/
 terraform destroy --auto-approve
+
+# Xóa toàn bộ phần mềm ArgoCD khỏi K8s Cluster (Tùy chọn nếu muốn gỡ sạch)
+kubectl delete namespace argocd
 ```
 
 *(Lưu ý: Hành động xóa Namespace `volunteerhub-prod` bằng Terraform sẽ làm K8s tự động dọn dẹp toàn bộ các Pod, Service, Ingress và PVC nằm bên trong nó)*
