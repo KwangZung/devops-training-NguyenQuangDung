@@ -30,7 +30,47 @@ Hệ thống hiện tại được thiết lập để tận dụng tối đa qu
 
 ---
 
-## 3. Cách chạy hệ thống từ đầu
+## 3. Các thành phần hệ thống (Theo chuẩn yêu cầu Capstone)
+
+Dưới đây là danh sách các file cấu hình được tạo thêm trong dự án để đáp ứng đầy đủ các tiêu chí của Capstone, được sắp xếp theo đúng trình tự xây dựng:
+
+### 3.1. Khởi tạo Hạ tầng cơ sở (Terraform)
+Thư mục `infra/` chứa mã nguồn Terraform để khởi tạo các tài nguyên Kubernetes ở mức Cluster (Namespace, Secret).
+- [`infra/main.tf`](https://github.com/KwangZung/volunteer-hub/tree/main/infra/main.tf): Cấu hình provider, tự động cấp phát Namespace `volunteerhub-prod` và tiêm bảo mật Secret (Tài khoản DB).
+- [`infra/variables.tf`](https://github.com/KwangZung/volunteer-hub/tree/main/infra/variables.tf): Định nghĩa các biến môi trường cho Terraform.
+
+### 3.2. Triển khai Database StatefulSet (MongoDB)
+- [`charts/volunteerhub/templates/mongodb-statefulset.yaml`](https://github.com/KwangZung/volunteer-hub/tree/main/charts/volunteerhub/templates/mongodb-statefulset.yaml): Khai báo StatefulSet cho MongoDB đi kèm với PersistentVolumeClaim để lưu trữ dữ liệu an toàn.
+- [`charts/volunteerhub/templates/mongodb-service.yaml`](https://github.com/KwangZung/volunteer-hub/tree/main/charts/volunteerhub/templates/mongodb-service.yaml): Khai báo Headless Service cho MongoDB.
+
+### 3.3. Triển khai Ứng dụng Backend & Frontend
+- [`charts/volunteerhub/templates/backend-deployment.yaml`](https://github.com/KwangZung/volunteer-hub/tree/main/charts/volunteerhub/templates/backend-deployment.yaml) & [`backend-service.yaml`](https://github.com/KwangZung/volunteer-hub/tree/main/charts/volunteerhub/templates/backend-service.yaml): Chạy Backend Node.js, lấy thông tin kết nối DB từ Secret do Terraform tạo ra.
+- [`charts/volunteerhub/templates/frontend-deployment.yaml`](https://github.com/KwangZung/volunteer-hub/tree/main/charts/volunteerhub/templates/frontend-deployment.yaml) & [`frontend-service.yaml`](https://github.com/KwangZung/volunteer-hub/tree/main/charts/volunteerhub/templates/frontend-service.yaml): Chạy Frontend tĩnh siêu nhẹ trên nền Nginx.
+
+### 3.4. Đóng gói bằng Helm Chart
+Toàn bộ các file `.yaml` kể trên được quản lý tập trung và phân phối thông qua Helm:
+- [`charts/volunteerhub/Chart.yaml`](https://github.com/KwangZung/volunteer-hub/tree/main/charts/volunteerhub/Chart.yaml): Khai báo thông tin metadata của Chart.
+- [`charts/volunteerhub/values.yaml`](https://github.com/KwangZung/volunteer-hub/tree/main/charts/volunteerhub/values.yaml): Quản lý tập trung các biến cấu hình động (Image tag, domain, resources limit).
+
+### 3.5. Ingress Controller
+- [`charts/volunteerhub/templates/ingress.yaml`](https://github.com/KwangZung/volunteer-hub/tree/main/charts/volunteerhub/templates/ingress.yaml): Điều phối traffic từ cổng `8081` của Host (thông qua Traefik) phân luồng thông minh: `/api` chuyển cho Backend, `/` chuyển cho Frontend.
+- [`charts/volunteerhub/templates/issuer.yaml`](https://github.com/KwangZung/volunteer-hub/tree/main/charts/volunteerhub/templates/issuer.yaml): Khai báo Cert-Manager Issuer phục vụ cấp phát chứng chỉ TLS (mở rộng sau này).
+
+### 3.6. Tích hợp Monitoring
+- [`charts/volunteerhub/templates/servicemonitor.yaml`](https://github.com/KwangZung/volunteer-hub/tree/main/charts/volunteerhub/templates/servicemonitor.yaml): Cấu hình cho Prometheus tự động cào (scrape) số liệu tài nguyên từ các Service trong hệ thống.
+
+### 3.7. Chuỗi cung ứng bảo mật (CI Pipeline)
+- [`.github/workflows/supply-chain.yml`](https://github.com/KwangZung/volunteer-hub/tree/main/.github/workflows/supply-chain.yml): Luồng GitHub Actions kích hoạt khi có code đẩy lên nhánh `main`. Pipeline này thực hiện: Build Docker Image, quét lỗ hổng bằng **Trivy**, trích xuất SBOM bằng **Syft**, ký điện tử bằng **Cosign** (Keyless), và đẩy lên GHCR.
+
+### 3.8. GitOps (CD Pipeline)
+- [`charts/argocd-app.yaml`](https://github.com/KwangZung/volunteer-hub/tree/main/charts/argocd-app.yaml): Cấu hình Application cho ArgoCD. ArgoCD sẽ "giám sát" thư mục `charts/volunteerhub` trên repo GitHub và tự động đồng bộ (Sync) mọi thay đổi xuống K8s cluster.
+
+### 3.9. Cẩm nang vận hành (Runbook)
+- [`RUNBOOK.md`](https://github.com/KwangZung/volunteer-hub/tree/main/RUNBOOK.md): Hướng dẫn đội ngũ vận hành phản ứng, debug và khắc phục khi hệ thống gặp sự cố.
+
+---
+
+## 4. Cách chạy hệ thống từ đầu
 
 ### Bước 1: Tạo Namespace và Secret bằng Terraform
 ```bash
