@@ -114,6 +114,21 @@ Mở trình duyệt truy cập vào địa chỉ:
 *(Nhớ **Ctrl + F5** hoặc xóa bộ nhớ đệm trình duyệt nếu truy cập lần đầu sau khi cập nhật giao diện).*
 
 ![VolunteerHub UI](./screenshots/volunteerhub-ui.png)
+
+### Bước 5: Dọn dẹp tài nguyên (Cleanup)
+
+Sau khi báo cáo xong và muốn dọn dẹp hệ thống trả lại tài nguyên cho máy tính, bạn chỉ cần dùng Terraform để xóa bỏ toàn bộ Namespace và Secret:
+
+```bash
+cd infra/
+terraform destroy --auto-approve
+
+# Xóa cấu hình ArgoCD (Tùy chọn)
+kubectl delete -f ../charts/argocd-app.yaml
+```
+
+*(Lưu ý: Hành động xóa Namespace `volunteerhub-prod` bằng Terraform sẽ làm K8s tự động dọn dẹp toàn bộ các Pod, Service, Ingress và PVC nằm bên trong nó)*
+
 ---
 
 ## 4. Kết quả
