@@ -120,11 +120,11 @@ Mở trình duyệt truy cập vào địa chỉ:
 Sau khi báo cáo xong và muốn dọn dẹp hệ thống trả lại tài nguyên cho máy tính, bạn chỉ cần dùng Terraform để xóa bỏ toàn bộ Namespace và Secret:
 
 ```bash
+# Xóa cấu hình ArgoCD trước để tránh tự động phục hồi tài nguyên
+kubectl delete -f infra/argocd-app.yaml
+
 cd infra/
 terraform destroy --auto-approve
-
-# Xóa cấu hình ArgoCD (Tùy chọn)
-kubectl delete -f argocd-app.yaml
 ```
 
 *(Lưu ý: Hành động xóa Namespace `volunteerhub-prod` bằng Terraform sẽ làm K8s tự động dọn dẹp toàn bộ các Pod, Service, Ingress và PVC nằm bên trong nó)*
