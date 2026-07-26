@@ -17,3 +17,5 @@ mlops_env/
 __pycache__/
 *.pyc
 mlruns/
+
+grype.exe
