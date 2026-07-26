@@ -1,4 +1,6 @@
+# pyrefly: ignore [missing-import]
 import mlflow
+# pyrefly: ignore [missing-import]
 import mlflow.sklearn
 import numpy as np
 from sklearn.ensemble import RandomForestRegressor
