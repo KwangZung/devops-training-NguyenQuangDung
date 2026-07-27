@@ -52,7 +52,7 @@ jobs:
           cd phase-2/track-mlops-security/week-5/day-7/ml-lab
           python train.py
       - name: Upload Model Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trained-model
           path: phase-2/track-mlops-security/week-5/day-7/ml-lab/model.pkl
@@ -63,7 +63,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Download Model Artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: trained-model
           path: phase-2/track-mlops-security/week-5/day-7/ml-lab/

@@ -198,7 +198,7 @@
 - Cụ thể ở Job `mlops-training`:
   ```yaml
       - name: Upload Model Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: trained-model
           path: phase-2/track-mlops-security/week-5/day-7/ml-lab/model.pkl
@@ -206,7 +206,7 @@
 - Ở Job `container-security`, bắt buộc nó chờ Job Training (thêm lệnh `needs: mlops-training`), và thêm Action tải file Model về trước bước `Build Docker Image`:
   ```yaml
       - name: Download Model Artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: trained-model
           path: phase-2/track-mlops-security/week-5/day-7/ml-lab/
