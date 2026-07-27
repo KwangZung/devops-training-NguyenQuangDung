@@ -3,7 +3,6 @@ name: MLOps Security Pipeline
 on:
   push:
     branches: [ "phase-2/week-5" ]
-    # Chỉ kích hoạt Pipeline nếu có thay đổi trong thư mục day-7
     paths:
       - 'phase-2/track-mlops-security/week-5/day-7/**'
 
@@ -21,13 +20,12 @@ jobs:
           base: ""
           head: ${{ github.ref_name }}
       - name: SAST Scanning (Semgrep)
-        if: always() # Bắt buộc chạy dù TruffleHog phía trước có Gate Fail (Exit 183)
+        if: always()
         run: |
           python -m pip install semgrep
           semgrep scan --config auto phase-2/track-mlops-security/week-5/day-7/ml-lab/
 
   sca-scanning:
-    # Chạy song song độc lập, không dùng 'needs' để tránh bị block
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -40,7 +38,6 @@ jobs:
           fail-build: true
 
   mlops-training:
-    # Chạy song song độc lập
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -52,15 +49,24 @@ jobs:
         run: pip install -r phase-2/track-mlops-security/week-5/day-7/ml-lab/requirements.txt
       - name: Pull Data (DVC) and Train Model (MLflow)
         run: |
-          echo "Simulating DVC pull from remote storage..."
           cd phase-2/track-mlops-security/week-5/day-7/ml-lab
           python train.py
+      - name: Upload Model Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: trained-model
+          path: phase-2/track-mlops-security/week-5/day-7/ml-lab/model.pkl
 
   container-security:
-    # Chạy song song độc lập
+    needs: mlops-training
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Download Model Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: trained-model
+          path: phase-2/track-mlops-security/week-5/day-7/ml-lab/
       - name: Build Docker Image
         run: docker build -t ml-api:latest phase-2/track-mlops-security/week-5/day-7/ml-lab/
       - name: Run Trivy vulnerability scanner
@@ -72,7 +78,7 @@ jobs:
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
-        
+
   deploy-model:
     needs: [sast-and-secret, sca-scanning, mlops-training, container-security]
     runs-on: ubuntu-latest

@@ -151,7 +151,72 @@
 ![train](./screenshots/mlops-training-succeed.png)
 ![container security](./screenshots/container-security-failed.png)
 
-## 3. Kết quả
+## 3. Phần 2: Vá Lỗi & Hoàn thiện Kiến trúc MLOps
+**Bước 1: Vá lỗi mã nguồn & Tạo Model Artifact**
+- Mở file `ml-lab/train.py`, xóa bỏ hoàn toàn dòng `AWS_SECRET_KEY` (để sửa lỗi rò rỉ khóa của TruffleHog) và hàm `eval()` (để sửa lỗi mã nguồn của Semgrep).
+- Sửa lại nội dung file `train.py` để bổ sung tính năng lưu mô hình thành file vật lý:
+  ```python
+  import mlflow
+  import pickle
+
+  with mlflow.start_run():
+      mlflow.log_param("epochs", 50)
+      mlflow.log_metric("accuracy", 0.99)
+      print("Model trained and logged to MLflow successfully!")
+      
+      # Lưu file model cục bộ để đẩy lên GitHub Artifact
+      dummy_model = {"model_name": "Secure_RF_Model", "accuracy": 0.99}
+      with open("model.pkl", "wb") as f:
+          pickle.dump(dummy_model, f)
+      print("Model artifact saved to model.pkl")
+  ```
+
+**Bước 2: Vá lỗi lỗ hổng thư viện**
+- Mở file `ml-lab/requirements.txt`, nâng cấp toàn bộ thư viện lên bản mới và an toàn để vượt qua bài quét của **Grype**:
+  ```text
+  mlflow>=2.8.0
+  scikit-learn>=1.3.2
+  requests>=2.31.0
+  Flask>=2.3.3
+  ```
+
+**Bước 3: Vá lỗi Container OS**
+- Mở file `ml-lab/Dockerfile`, đổi sang Base Image `python:3.9-slim` (bản nhẹ và an toàn hơn buster) để sửa lỗi của **Trivy**.
+- Thêm lệnh `COPY model.pkl .` để nhét Model vào Docker:
+  ```dockerfile
+  FROM python:3.9-slim
+  WORKDIR /app
+  COPY requirements.txt .
+  RUN pip install -r requirements.txt
+  COPY train.py .
+  COPY model.pkl .
+  CMD ["python", "train.py"]
+  ```
+
+**Bước 4: Chuẩn hóa Pipeline truyền tải Artifact**
+- Mở file `.github/workflows/mlops-pipeline.yml` (hoặc `mlops-pipeline.yaml`), thêm Action tải lên/tải xuống Artifact.
+- Cụ thể ở Job `mlops-training`:
+  ```yaml
+      - name: Upload Model Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: trained-model
+          path: phase-2/track-mlops-security/week-5/day-7/ml-lab/model.pkl
+  ```
+- Ở Job `container-security`, bắt buộc nó chờ Job Training (thêm lệnh `needs: mlops-training`), và thêm Action tải file Model về trước bước `Build Docker Image`:
+  ```yaml
+      - name: Download Model Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: trained-model
+          path: phase-2/track-mlops-security/week-5/day-7/ml-lab/
+  ```
+
+**Bước 5: Đẩy code và xem kết quả hoàn mỹ**
+- Commit và Push toàn bộ thay đổi này lên nhánh `phase-2/week-5`.
+- Kết quả:
+
+## 4. Kết quả
 
 ## 4. Khó khăn & cách giải quyết
 
