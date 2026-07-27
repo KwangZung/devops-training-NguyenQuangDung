@@ -140,11 +140,16 @@
       runs-on: ubuntu-latest
       steps:
         - name: Deploy to Production
-          run: echo "🚀 Mọi bài kiểm tra bảo mật đã qua! Đang triển khai Model lên môi trường Production..."
+          run: echo "All security checks passed, deploying model to production..."
   ```
 
 **Bước 3: Kích hoạt Pipeline trên GitHub**
 - Khi push toàn bộ thay đổi này lên nhánh `phase-2/week-5` là Pipeline sẽ tự động được kích hoạt:
+- Kết quả: ngoại trừ job `mlops-training`, cả 3 job còn lại đều fail, nên model sẽ không được deploy
+![sast secret](./screenshots/sast-and-secret-result.png)
+![sca](./screenshots/sca-scanning-failed.png)
+![train](./screenshots/mlops-training-succeed.png)
+![container security](./screenshots/container-security-failed.png)
 
 ## 3. Kết quả
 
