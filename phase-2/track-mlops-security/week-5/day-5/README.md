@@ -73,9 +73,8 @@
   docker build -t secure-app:latest .
   ./trivy image --format template --template "@html.tpl" -o secure-report.html secure-app:latest
   ```
-- Mở file `secure-report.html` bằng trình duyệt để xem thành quả bảo mật.
-- *(Chụp ảnh màn hình kết quả báo cáo sạch bóng lỗ hổng của bản vá chèn vào README là bệ hạ đã hoàn thành xuất sắc nhiệm vụ)*
-
+- Mở file [`secure-report.html`](./trivy_lab/secure-report.html) bằng trình duyệt để xem thành quả bảo mật.
+![secure](./screenshots/trivy-secured-image-report.png)
 ## 3. Kết quả
 
 ## 4. Khó khăn & cách giải quyết
