@@ -215,7 +215,9 @@
 
 **Bước 5: Đẩy code và xem kết quả hoàn mỹ**
 - Commit và Push toàn bộ thay đổi này lên nhánh `phase-2/week-5`.
-- Kết quả:
+- Kết quả: pipeline thành công
+![success](./screenshots/pipeline-success.png)
+- Download model đã train: [Trained Model](https://github.com/kazunguyen/devops-training-NguyenQuangDung/actions/runs/30253025497/artifacts/8647751000)
 
 ## 4. Kết quả
 
