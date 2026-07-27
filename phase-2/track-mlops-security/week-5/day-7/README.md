@@ -77,29 +77,28 @@
         - name: Secret Scanning (TruffleHog)
           uses: trufflesecurity/trufflehog@main
           with:
-            path: ./ # TruffleHog quét qua git history nên để ./ vẫn an toàn và quét được mọi thứ mới commit
+            path: ./ 
             base: ""
             head: ${{ github.ref_name }}
         - name: SAST Scanning (Semgrep)
+          if: always() # Bắt buộc chạy dù TruffleHog phía trước có Gate Fail (Exit 183)
           run: |
             python -m pip install semgrep
-            # Ép Semgrep chỉ quét thư mục ml-lab
             semgrep scan --config auto phase-2/track-mlops-security/week-5/day-7/ml-lab/
 
     sca-scanning:
-      needs: sast-and-secret
+      # Chạy song song độc lập, không dùng 'needs' để tránh bị block
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v3
         - name: Run Grype vulnerability scanner
           uses: anchore/scan-action@v3
           with:
-            # Ép Grype chỉ soi thư mục ml-lab
             path: "phase-2/track-mlops-security/week-5/day-7/ml-lab/"
             fail-build: true
 
     mlops-training:
-      needs: sca-scanning
+      # Chạy song song độc lập
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v3
@@ -116,7 +115,7 @@
             python train.py
 
     container-security:
-      needs: mlops-training
+      # Chạy song song độc lập
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v3
@@ -127,7 +126,7 @@
           with:
             image-ref: 'ml-api:latest'
             format: 'table'
-            exit-code: '1' # Kích hoạt Gate Fail
+            exit-code: '1' 
             ignore-unfixed: true
             vuln-type: 'os,library'
             severity: 'CRITICAL,HIGH'
