@@ -11,43 +11,81 @@
 ## 1. Mục tiêu
 
 ## 2. Cách chạy
-**Bước 1: Khởi tạo luồng GitHub Actions (CI/CD Pipeline)**
-- Mục tiêu của bài Lab tổng hợp này là xâu chuỗi tất cả các công cụ bảo mật rời rạc (Semgrep, Grype, TruffleHog, Trivy, ZAP) vào chung một quy trình tự động hóa duy nhất.
-- Tại thư mục gốc của dự án, tiến hành tạo thư mục chứa cấu hình Workflow của GitHub Actions (nếu chưa có):
+**Bước 1: Chuẩn bị mã nguồn Machine Learning**
+- Tạo thư mục chứa mã nguồn bài Lab:
+  ```bash
+  mkdir -p phase-2/track-mlops-security/week-5/day-7/ml-lab
+  ```
+- Tạo file [`phase-2/track-mlops-security/week-5/day-7/ml-lab/train.py`](./ml-lab/train.py) (Mô phỏng huấn luyện mô hình, ghi log vào MLflow, cố tình chứa mật khẩu AWS và hàm nguy hiểm `eval()`):
+  ```python
+  import mlflow
+  import os
+
+  # Lỗi bảo mật 1: Rò rỉ Secret Key của AWS S3 (nơi DVC lưu trữ dữ liệu)
+  AWS_SECRET_KEY = "AKIAIOSFODNN7EXAMPLE" 
+  
+  # Lỗi bảo mật 2: Sử dụng hàm nguy hiểm eval()
+  user_input = "print('MLOps Training Started')"
+  eval(user_input)
+
+  with mlflow.start_run():
+      mlflow.log_param("epochs", 50)
+      mlflow.log_metric("accuracy", 0.95)
+      print("Model trained and logged to MLflow successfully!")
+  ```
+- Tạo file [`phase-2/track-mlops-security/week-5/day-7/ml-lab/requirements.txt`](./ml-lab/requirement.txt) (Dùng thư viện cũ để Grype bắt lỗi):
+  ```text
+  mlflow==2.1.0
+  scikit-learn==1.2.0
+  requests==2.19.0
+  Flask==0.12.2
+  ```
+- Tạo file [`phase-2/track-mlops-security/week-5/day-7/ml-lab/Dockerfile`](./ml-lab/Dockerfile)(Đóng gói API, dùng base image cũ để Trivy bắt lỗi):
+  ```dockerfile
+  FROM python:3.7-buster
+  WORKDIR /app
+  COPY requirements.txt .
+  RUN pip install -r requirements.txt
+  COPY train.py .
+  CMD ["python", "train.py"]
+  ```
+
+**Bước 2: Cấu hình MLOps Security Pipeline giới hạn phạm vi quét**
+- Để tránh các công cụ đi quét linh tinh vào các bài tập cũ, ta sẽ thiết lập tham số `path` ép chúng chỉ quét đúng thư mục `ml-lab`.
+- Tạo thư mục Workflow ở gốc dự án (nếu chưa có):
   ```bash
   mkdir -p .github/workflows
   ```
-- Tạo file `.github/workflows/devsecops-pipeline.yml` và cấu hình luồng chạy như sau:
+- Tạo file [`.github/workflows/mlops-pipeline.yaml`](../../../../.github/workflows/mlops-pipeline.yaml) và dán cấu hình sau:
   ```yaml
-  name: Complete DevSecOps Pipeline
+  name: MLOps Security Pipeline
 
   on:
     push:
       branches: [ "phase-2/week-5" ]
+      # Chỉ kích hoạt Pipeline nếu có thay đổi trong thư mục day-7
+      paths:
+        - 'phase-2/track-mlops-security/week-5/day-7/**'
 
   jobs:
-    # Trạm 1: Quét mã nguồn và rò rỉ Secret
     sast-and-secret:
       runs-on: ubuntu-latest
       steps:
-        - name: Checkout code
-          uses: actions/checkout@v3
+        - uses: actions/checkout@v3
           with:
-            fetch-depth: 0 # Bắt buộc để TruffleHog quét lịch sử
-        
+            fetch-depth: 0 
         - name: Secret Scanning (TruffleHog)
           uses: trufflesecurity/trufflehog@main
           with:
-            path: ./
+            path: ./ # TruffleHog quét qua git history nên để ./ vẫn an toàn và quét được mọi thứ mới commit
             base: ""
             head: ${{ github.ref_name }}
-            
         - name: SAST Scanning (Semgrep)
           run: |
             python -m pip install semgrep
-            semgrep scan --config auto .
+            # Ép Semgrep chỉ quét thư mục ml-lab
+            semgrep scan --config auto phase-2/track-mlops-security/week-5/day-7/ml-lab/
 
-    # Trạm 2: Quét lỗ hổng thư viện (Chỉ chạy nếu Trạm 1 qua cửa)
     sca-scanning:
       needs: sast-and-secret
       runs-on: ubuntu-latest
@@ -56,60 +94,47 @@
         - name: Run Grype vulnerability scanner
           uses: anchore/scan-action@v3
           with:
-            path: "."
+            # Ép Grype chỉ soi thư mục ml-lab
+            path: "phase-2/track-mlops-security/week-5/day-7/ml-lab/"
             fail-build: true
 
-    # Trạm 3: Quét Container Image
-    container-security:
+    mlops-training:
       needs: sca-scanning
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v3
+        - name: Set up Python
+          uses: actions/setup-python@v4
+          with:
+            python-version: '3.9'
+        - name: Install dependencies
+          run: pip install -r phase-2/track-mlops-security/week-5/day-7/ml-lab/requirements.txt
+        - name: Pull Data (DVC) and Train Model (MLflow)
+          run: |
+            echo "Simulating DVC pull from remote storage..."
+            cd phase-2/track-mlops-security/week-5/day-7/ml-lab
+            python train.py
+
+    container-security:
+      needs: mlops-training
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
         - name: Build Docker Image
-          run: docker build -t my-app:latest phase-2/track-mlops-security/week-5/day-5/trivy_lab/
+          run: docker build -t ml-api:latest phase-2/track-mlops-security/week-5/day-7/ml-lab/
         - name: Run Trivy vulnerability scanner
           uses: aquasecurity/trivy-action@master
           with:
-            image-ref: 'my-app:latest'
+            image-ref: 'ml-api:latest'
             format: 'table'
             exit-code: '1' # Kích hoạt Gate Fail
             ignore-unfixed: true
             vuln-type: 'os,library'
             severity: 'CRITICAL,HIGH'
-
-    # Trạm 4: Kiểm thử Động (DAST)
-    dast-testing:
-      needs: container-security
-      runs-on: ubuntu-latest
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v3
-        - name: Deploy temporary test container (Juice Shop for demo)
-          run: docker run -d -p 3000:3000 bkimminich/juice-shop
-        - name: OWASP ZAP Baseline Scan
-          uses: zaproxy/action-baseline@v0.10.0
-          with:
-            target: 'http://localhost:3000'
-            fail_action: true # Gate Fail
   ```
 
-**Bước 2: Phân tích cơ chế Gate Fail toàn tập**
-- Trong đoạn cấu hình YAML trên, ta đã thiết lập một rào chắn 4 lớp cực kỳ nghiêm ngặt:
-  - **Sast-and-secret:** Nếu có mã độc hoặc lộ Key -> Vỡ trận.
-  - **Sca-scanning:** Nếu thư viện dính CVE -> Vỡ trận.
-  - **Container-security:** Nếu hệ điều hành của Docker dính CVE mức độ HIGH/CRITICAL -> Vỡ trận.
-  - **Dast-testing:** Nếu bị tấn công thành công qua cổng Web HTTP -> Vỡ trận.
-- Chỉ khi ứng dụng hoàn toàn trong sạch, vượt qua cả 4 ải kiểm duyệt (Exit Code 0), Pipeline mới cho phép đi đến bước Deploy cuối cùng (không có trong lab này). Bất cứ lỗi nào (Exit Code 1) cũng sẽ làm Pipeline đỏ chót.
-
-**Bước 3: Kích hoạt Pipeline**
-- Thực hiện Commit và Push toàn bộ bài thực hành (bao gồm cả thư mục `.github`) lên nhánh `phase-2/week-5` để đánh thức GitHub Actions:
-  ```bash
-  git add .
-  git commit -m "feat: integrate full devsecops pipeline"
-  git push origin phase-2/week-5
-  ```
-- Mở trình duyệt, truy cập vào giao diện GitHub của Repo dự án, chuyển sang tab **Actions** để tận mắt theo dõi tiến trình Pipeline đang vượt rào qua từng trạm kiểm soát (Jobs).
-- *(Chèn ảnh chụp màn hình giao diện GitHub Actions hiển thị luồng Pipeline hoàn chỉnh tại đây)*.
+**Bước 3: Kích hoạt Pipeline trên GitHub**
+- Khi push toàn bộ thay đổi này lên nhánh `phase-2/week-5` là Pipeline sẽ tự động được kích hoạt:
 
 ## 3. Kết quả
 

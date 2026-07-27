@@ -1,0 +1,71 @@
+name: MLOps Security Pipeline
+
+on:
+  push:
+    branches: [ "phase-2/week-5" ]
+    paths:
+      - 'phase-2/track-mlops-security/week-5/day-7/**'
+
+jobs:
+  sast-and-secret:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 
+      - name: Secret Scanning (TruffleHog)
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./ 
+          base: ""
+          head: ${{ github.ref_name }}
+      - name: SAST Scanning (Semgrep)
+        run: |
+          python -m pip install semgrep
+          # Ép Semgrep chỉ quét thư mục ml-lab
+          semgrep scan --config auto phase-2/track-mlops-security/week-5/day-7/ml-lab/
+
+  sca-scanning:
+    needs: sast-and-secret
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Run Grype vulnerability scanner
+        uses: anchore/scan-action@v3
+        with:
+          path: "phase-2/track-mlops-security/week-5/day-7/ml-lab/"
+          fail-build: true
+
+  mlops-training:
+    needs: sca-scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install dependencies
+        run: pip install -r phase-2/track-mlops-security/week-5/day-7/ml-lab/requirements.txt
+      - name: Pull Data (DVC) and Train Model (MLflow)
+        run: |
+          echo "Simulating DVC pull from remote storage..."
+          cd phase-2/track-mlops-security/week-5/day-7/ml-lab
+          python train.py
+
+  container-security:
+    needs: mlops-training
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build Docker Image
+        run: docker build -t ml-api:latest phase-2/track-mlops-security/week-5/day-7/ml-lab/
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'ml-api:latest'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
