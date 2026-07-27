@@ -42,7 +42,7 @@
   ```
 - Tạo file [`phase-2/track-mlops-security/week-5/day-7/ml-lab/Dockerfile`](./ml-lab/Dockerfile)(Đóng gói API, dùng base image cũ để Trivy bắt lỗi):
   ```dockerfile
-  FROM python:3.7-buster
+  FROM python:3.9-buster
   WORKDIR /app
   COPY requirements.txt .
   RUN pip install -r requirements.txt
@@ -93,6 +93,8 @@
         - uses: actions/checkout@v3
         - name: Run Grype vulnerability scanner
           uses: anchore/scan-action@v3
+          env:
+            GRYPE_DB_MAX_ALLOWED_BUILT_AGE: "87600h" # Bỏ qua lỗi DB quá hạn (Mặc định Grype báo lỗi nếu DB cũ hơn 5 ngày)
           with:
             path: "phase-2/track-mlops-security/week-5/day-7/ml-lab/"
             fail-build: true
@@ -130,6 +132,15 @@
             ignore-unfixed: true
             vuln-type: 'os,library'
             severity: 'CRITICAL,HIGH'
+
+    # Trạm cuối: Triển khai Model
+    deploy-model:
+      # Job này chỉ được chạy khi CẢ 4 JOB TRÊN đều Pass (Exit Code 0)
+      needs: [sast-and-secret, sca-scanning, mlops-training, container-security]
+      runs-on: ubuntu-latest
+      steps:
+        - name: Deploy to Production
+          run: echo "🚀 Mọi bài kiểm tra bảo mật đã qua! Đang triển khai Model lên môi trường Production..."
   ```
 
 **Bước 3: Kích hoạt Pipeline trên GitHub**
