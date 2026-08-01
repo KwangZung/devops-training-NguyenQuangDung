@@ -1,0 +1,8 @@
+rules:
+  - id: detect-aws-hardcoded-secret
+    languages:
+      - python
+    message: "[CRITICAL WARNING] Hardcoded AWS Access Key detected! This can lead to cloud system compromise. Never store secrets in source code."
+    severity: ERROR
+    pattern: |
+      AWS_ACCESS_KEY_ID = "..."

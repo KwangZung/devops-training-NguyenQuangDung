@@ -10,4 +10,12 @@ awscliv2.zip
 certs
 
 k8s-COURSES/
-curriculum.md
+# curriculum.md
+
+# Python/MLflow ignores
+mlops_env/
+__pycache__/
+*.pyc
+mlruns/
+
+*.exe

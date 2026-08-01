@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <style>
+      * {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      h1 {
+        text-align: center;
+      }
+      .group-header th {
+        font-size: 200%;
+      }
+      .sub-header th {
+        font-size: 150%;
+      }
+      table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        white-space: nowrap;
+        padding: .3em;
+      }
+      table {
+        margin: 0 auto;
+      }
+      .severity {
+        text-align: center;
+        font-weight: bold;
+        color: #fafafa;
+      }
+      .severity-LOW .severity { background-color: #5fbb31; }
+      .severity-MEDIUM .severity { background-color: #e9c600; }
+      .severity-HIGH .severity { background-color: #ff8800; }
+      .severity-CRITICAL .severity { background-color: #e40000; }
+      .severity-UNKNOWN .severity { background-color: #747474; }
+      .severity-LOW { background-color: #5fbb3160; }
+      .severity-MEDIUM { background-color: #e9c60060; }
+      .severity-HIGH { background-color: #ff880060; }
+      .severity-CRITICAL { background-color: #e4000060; }
+      .severity-UNKNOWN { background-color: #74747460; }
+      table tr td:first-of-type {
+        font-weight: bold;
+      }
+      .links a,
+      .links[data-more-links=on] a {
+        display: block;
+      }
+      .links[data-more-links=off] a:nth-of-type(1n+5) {
+        display: none;
+      }
+      a.toggle-more-links { cursor: pointer; }
+    </style>
+    <title>secure-app:latest (alpine 3.24.1) - Trivy Report - 2026-07-27 10:46:29.6332347 +0700 +07 m=+1.217228901 </title>
+    <script>
+      window.onload = function() {
+        document.querySelectorAll('td.links').forEach(function(linkCell) {
+          var links = [].concat.apply([], linkCell.querySelectorAll('a'));
+          [].sort.apply(links, function(a, b) {
+            return a.href > b.href ? 1 : -1;
+          });
+          links.forEach(function(link, idx) {
+            if (links.length > 3 && 3 === idx) {
+              var toggleLink = document.createElement('a');
+              toggleLink.innerText = "Toggle more links";
+              toggleLink.href = "#toggleMore";
+              toggleLink.setAttribute("class", "toggle-more-links");
+              linkCell.appendChild(toggleLink);
+            }
+            linkCell.appendChild(link);
+          });
+        });
+        document.querySelectorAll('a.toggle-more-links').forEach(function(toggleLink) {
+          toggleLink.onclick = function() {
+            var expanded = toggleLink.parentElement.getAttribute("data-more-links");
+            toggleLink.parentElement.setAttribute("data-more-links", "on" === expanded ? "off" : "on");
+            return false;
+          };
+        });
+      };
+    </script>
+  </head>
+  <body>
+    <h1>secure-app:latest (alpine 3.24.1) - Trivy Report - 2026-07-27 10:46:29.6332347 +0700 +07 m=+1.217228901</h1>
+    <table>
+      <tr class="group-header"><th colspan="6">alpine</th></tr>
+      <tr><th colspan="6">No Vulnerabilities found</th></tr>
+      <tr><th colspan="6">No Misconfigurations found</th></tr>
+      <tr class="group-header"><th colspan="6">python-pkg</th></tr>
+      <tr class="sub-header">
+        <th>Package</th>
+        <th>Vulnerability ID</th>
+        <th>Severity</th>
+        <th>Installed Version</th>
+        <th>Fixed Version</th>
+        <th>Links</th>
+      </tr>
+      <tr class="severity-HIGH">
+        <td class="pkg-name">jaraco.context</td>
+        <td>CVE-2026-23949</td>
+        <td class="severity">HIGH</td>
+        <td class="pkg-version">5.3.0</td>
+        <td>6.1.0</td>
+        <td class="links" data-more-links="off">
+          <a href="https://access.redhat.com/security/cve/CVE-2026-23949">https://access.redhat.com/security/cve/CVE-2026-23949</a>
+          <a href="https://github.com/jaraco/jaraco.context">https://github.com/jaraco/jaraco.context</a>
+          <a href="https://github.com/jaraco/jaraco.context/blob/main/jaraco/context/__init__.py#L74-L91">https://github.com/jaraco/jaraco.context/blob/main/jaraco/context/__init__.py#L74-L91</a>
+          <a href="https://github.com/jaraco/jaraco.context/commit/7b26a42b525735e4085d2e994e13802ea339d5f9">https://github.com/jaraco/jaraco.context/commit/7b26a42b525735e4085d2e994e13802ea339d5f9</a>
+          <a href="https://github.com/jaraco/jaraco.context/security/advisories/GHSA-58pv-8j8x-9vj2">https://github.com/jaraco/jaraco.context/security/advisories/GHSA-58pv-8j8x-9vj2</a>
+          <a href="https://github.com/pypa/setuptools/blob/main/setuptools/_vendor/jaraco/context.py#L55-L76">https://github.com/pypa/setuptools/blob/main/setuptools/_vendor/jaraco/context.py#L55-L76</a>
+          <a href="https://nvd.nist.gov/vuln/detail/CVE-2026-23949">https://nvd.nist.gov/vuln/detail/CVE-2026-23949</a>
+          <a href="https://ubuntu.com/security/notices/USN-7979-1">https://ubuntu.com/security/notices/USN-7979-1</a>
+          <a href="https://www.cve.org/CVERecord?id=CVE-2026-23949">https://www.cve.org/CVERecord?id=CVE-2026-23949</a>
+        </td>
+      </tr>
+      <tr class="severity-MEDIUM">
+        <td class="pkg-name">pip</td>
+        <td>CVE-2025-8869</td>
+        <td class="severity">MEDIUM</td>
+        <td class="pkg-version">24.0</td>
+        <td>25.3</td>
+        <td class="links" data-more-links="off">
+          <a href="https://access.redhat.com/security/cve/CVE-2025-8869">https://access.redhat.com/security/cve/CVE-2025-8869</a>
+          <a href="https://github.com/pypa/pip">https://github.com/pypa/pip</a>
+          <a href="https://github.com/pypa/pip/commit/f2b92314da012b9fffa36b3f3e67748a37ef464a">https://github.com/pypa/pip/commit/f2b92314da012b9fffa36b3f3e67748a37ef464a</a>
+          <a href="https://github.com/pypa/pip/pull/13550">https://github.com/pypa/pip/pull/13550</a>
+          <a href="https://lists.debian.org/debian-lts-announce/2025/10/msg00028.html">https://lists.debian.org/debian-lts-announce/2025/10/msg00028.html</a>
+          <a href="https://mail.python.org/archives/list/security-announce@python.org/thread/IF5A3GCJY3VH7BVHJKOWOJFKTW7VFQEN">https://mail.python.org/archives/list/security-announce@python.org/thread/IF5A3GCJY3VH7BVHJKOWOJFKTW7VFQEN</a>
+          <a href="https://mail.python.org/archives/list/security-announce@python.org/thread/IF5A3GCJY3VH7BVHJKOWOJFKTW7VFQEN/">https://mail.python.org/archives/list/security-announce@python.org/thread/IF5A3GCJY3VH7BVHJKOWOJFKTW7VFQEN/</a>
+          <a href="https://nvd.nist.gov/vuln/detail/CVE-2025-8869">https://nvd.nist.gov/vuln/detail/CVE-2025-8869</a>
+          <a href="https://pip.pypa.io/en/stable/news/#v25-2">https://pip.pypa.io/en/stable/news/#v25-2</a>
+          <a href="https://www.cve.org/CVERecord?id=CVE-2025-8869">https://www.cve.org/CVERecord?id=CVE-2025-8869</a>
+        </td>
+      </tr>
+      <tr class="severity-MEDIUM">
+        <td class="pkg-name">pip</td>
+        <td>CVE-2026-3219</td>
+        <td class="severity">MEDIUM</td>
+        <td class="pkg-version">24.0</td>
+        <td>26.1</td>
+        <td class="links" data-more-links="off">
+          <a href="http://www.openwall.com/lists/oss-security/2026/04/20/8">http://www.openwall.com/lists/oss-security/2026/04/20/8</a>
+          <a href="https://access.redhat.com/security/cve/CVE-2026-3219">https://access.redhat.com/security/cve/CVE-2026-3219</a>
+          <a href="https://github.com/pypa/pip">https://github.com/pypa/pip</a>
+          <a href="https://github.com/pypa/pip/issues/13867">https://github.com/pypa/pip/issues/13867</a>
+          <a href="https://github.com/pypa/pip/pull/13870">https://github.com/pypa/pip/pull/13870</a>
+          <a href="https://mail.python.org/archives/list/security-announce@python.org/thread/QAJ5JIVWWCAJ4EZL2FP5MOOW35JS7LRJ">https://mail.python.org/archives/list/security-announce@python.org/thread/QAJ5JIVWWCAJ4EZL2FP5MOOW35JS7LRJ</a>
+          <a href="https://mail.python.org/archives/list/security-announce@python.org/thread/QAJ5JIVWWCAJ4EZL2FP5MOOW35JS7LRJ/">https://mail.python.org/archives/list/security-announce@python.org/thread/QAJ5JIVWWCAJ4EZL2FP5MOOW35JS7LRJ/</a>
+          <a href="https://nvd.nist.gov/vuln/detail/CVE-2026-3219">https://nvd.nist.gov/vuln/detail/CVE-2026-3219</a>
+          <a href="https://www.cve.org/CVERecord?id=CVE-2026-3219">https://www.cve.org/CVERecord?id=CVE-2026-3219</a>
+        </td>
+      </tr>
+      <tr class="severity-MEDIUM">
+        <td class="pkg-name">pip</td>
+        <td>CVE-2026-6357</td>
+        <td class="severity">MEDIUM</td>
+        <td class="pkg-version">24.0</td>
+        <td>26.1</td>
+        <td class="links" data-more-links="off">
+          <a href="http://www.openwall.com/lists/oss-security/2026/04/27/7">http://www.openwall.com/lists/oss-security/2026/04/27/7</a>
+          <a href="https://access.redhat.com/security/cve/CVE-2026-6357">https://access.redhat.com/security/cve/CVE-2026-6357</a>
+          <a href="https://github.com/pypa/pip">https://github.com/pypa/pip</a>
+          <a href="https://github.com/pypa/pip/commit/b369bfc96cc524e00c267e1693290e6599c36bad">https://github.com/pypa/pip/commit/b369bfc96cc524e00c267e1693290e6599c36bad</a>
+          <a href="https://github.com/pypa/pip/pull/13923">https://github.com/pypa/pip/pull/13923</a>
+          <a href="https://ichard26.github.io/blog/2026/04/whats-new-in-pip-26.1/#security-fixes">https://ichard26.github.io/blog/2026/04/whats-new-in-pip-26.1/#security-fixes</a>
+          <a href="https://nvd.nist.gov/vuln/detail/CVE-2026-6357">https://nvd.nist.gov/vuln/detail/CVE-2026-6357</a>
+          <a href="https://www.cve.org/CVERecord?id=CVE-2026-6357">https://www.cve.org/CVERecord?id=CVE-2026-6357</a>
+        </td>
+      </tr>
+      <tr class="severity-MEDIUM">
+        <td class="pkg-name">pip</td>
+        <td>CVE-2026-8643</td>
+        <td class="severity">MEDIUM</td>
+        <td class="pkg-version">24.0</td>
+        <td>26.1.2</td>
+        <td class="links" data-more-links="off">
+          <a href="http://www.openwall.com/lists/oss-security/2026/06/01/5">http://www.openwall.com/lists/oss-security/2026/06/01/5</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:33313">https://access.redhat.com/errata/RHSA-2026:33313</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34374">https://access.redhat.com/errata/RHSA-2026:34374</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34456">https://access.redhat.com/errata/RHSA-2026:34456</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34739">https://access.redhat.com/errata/RHSA-2026:34739</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34740">https://access.redhat.com/errata/RHSA-2026:34740</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34741">https://access.redhat.com/errata/RHSA-2026:34741</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34748">https://access.redhat.com/errata/RHSA-2026:34748</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34749">https://access.redhat.com/errata/RHSA-2026:34749</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34750">https://access.redhat.com/errata/RHSA-2026:34750</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34752">https://access.redhat.com/errata/RHSA-2026:34752</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34756">https://access.redhat.com/errata/RHSA-2026:34756</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34758">https://access.redhat.com/errata/RHSA-2026:34758</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34760">https://access.redhat.com/errata/RHSA-2026:34760</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34765">https://access.redhat.com/errata/RHSA-2026:34765</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34772">https://access.redhat.com/errata/RHSA-2026:34772</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34773">https://access.redhat.com/errata/RHSA-2026:34773</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34774">https://access.redhat.com/errata/RHSA-2026:34774</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34775">https://access.redhat.com/errata/RHSA-2026:34775</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34776">https://access.redhat.com/errata/RHSA-2026:34776</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34777">https://access.redhat.com/errata/RHSA-2026:34777</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34778">https://access.redhat.com/errata/RHSA-2026:34778</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34780">https://access.redhat.com/errata/RHSA-2026:34780</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:34891">https://access.redhat.com/errata/RHSA-2026:34891</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:36193">https://access.redhat.com/errata/RHSA-2026:36193</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:36315">https://access.redhat.com/errata/RHSA-2026:36315</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:37275">https://access.redhat.com/errata/RHSA-2026:37275</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:37283">https://access.redhat.com/errata/RHSA-2026:37283</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:42078">https://access.redhat.com/errata/RHSA-2026:42078</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:42079">https://access.redhat.com/errata/RHSA-2026:42079</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:42132">https://access.redhat.com/errata/RHSA-2026:42132</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:42144">https://access.redhat.com/errata/RHSA-2026:42144</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:42644">https://access.redhat.com/errata/RHSA-2026:42644</a>
+          <a href="https://access.redhat.com/security/cve/CVE-2026-8643">https://access.redhat.com/security/cve/CVE-2026-8643</a>
+          <a href="https://bugzilla.redhat.com/2460927">https://bugzilla.redhat.com/2460927</a>
+          <a href="https://bugzilla.redhat.com/show_bug.cgi?id=2460927">https://bugzilla.redhat.com/show_bug.cgi?id=2460927</a>
+          <a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-8643">https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-8643</a>
+          <a href="https://errata.almalinux.org/9/ALSA-2026-36315.html">https://errata.almalinux.org/9/ALSA-2026-36315.html</a>
+          <a href="https://errata.rockylinux.org/RLSA-2026:36315">https://errata.rockylinux.org/RLSA-2026:36315</a>
+          <a href="https://github.com/pypa/advisory-database/tree/main/vulns/pip/PYSEC-2026-196.yaml">https://github.com/pypa/advisory-database/tree/main/vulns/pip/PYSEC-2026-196.yaml</a>
+          <a href="https://github.com/pypa/pip">https://github.com/pypa/pip</a>
+          <a href="https://github.com/pypa/pip/commit/8eb178480bd1a2b223f509fc430796b265158dfb">https://github.com/pypa/pip/commit/8eb178480bd1a2b223f509fc430796b265158dfb</a>
+          <a href="https://github.com/pypa/pip/pull/14000">https://github.com/pypa/pip/pull/14000</a>
+          <a href="https://linux.oracle.com/cve/CVE-2026-8643.html">https://linux.oracle.com/cve/CVE-2026-8643.html</a>
+          <a href="https://linux.oracle.com/errata/ELSA-2026-36315.html">https://linux.oracle.com/errata/ELSA-2026-36315.html</a>
+          <a href="https://mail.python.org/archives/list/security-announce@python.org/thread/YV63UET5D3OOJY7O4M5XCVYO2YM4NBYJ">https://mail.python.org/archives/list/security-announce@python.org/thread/YV63UET5D3OOJY7O4M5XCVYO2YM4NBYJ</a>
+          <a href="https://mail.python.org/archives/list/security-announce@python.org/thread/YV63UET5D3OOJY7O4M5XCVYO2YM4NBYJ/">https://mail.python.org/archives/list/security-announce@python.org/thread/YV63UET5D3OOJY7O4M5XCVYO2YM4NBYJ/</a>
+          <a href="https://nvd.nist.gov/vuln/detail/CVE-2026-8643">https://nvd.nist.gov/vuln/detail/CVE-2026-8643</a>
+          <a href="https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-8643.json">https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-8643.json</a>
+          <a href="https://www.cve.org/CVERecord?id=CVE-2026-8643">https://www.cve.org/CVERecord?id=CVE-2026-8643</a>
+        </td>
+      </tr>
+      <tr class="severity-LOW">
+        <td class="pkg-name">pip</td>
+        <td>CVE-2026-1703</td>
+        <td class="severity">LOW</td>
+        <td class="pkg-version">24.0</td>
+        <td>26.0</td>
+        <td class="links" data-more-links="off">
+          <a href="https://access.redhat.com/security/cve/CVE-2026-1703">https://access.redhat.com/security/cve/CVE-2026-1703</a>
+          <a href="https://github.com/pypa/pip">https://github.com/pypa/pip</a>
+          <a href="https://github.com/pypa/pip/commit/8e227a9be4faa9594e05d02ca05a413a2a4e7735">https://github.com/pypa/pip/commit/8e227a9be4faa9594e05d02ca05a413a2a4e7735</a>
+          <a href="https://github.com/pypa/pip/pull/13777">https://github.com/pypa/pip/pull/13777</a>
+          <a href="https://mail.python.org/archives/list/security-announce@python.org/thread/WIEA34D4TABF2UNQJAOMXKCICSPBE2DJ">https://mail.python.org/archives/list/security-announce@python.org/thread/WIEA34D4TABF2UNQJAOMXKCICSPBE2DJ</a>
+          <a href="https://mail.python.org/archives/list/security-announce@python.org/thread/WIEA34D4TABF2UNQJAOMXKCICSPBE2DJ/">https://mail.python.org/archives/list/security-announce@python.org/thread/WIEA34D4TABF2UNQJAOMXKCICSPBE2DJ/</a>
+          <a href="https://nvd.nist.gov/vuln/detail/CVE-2026-1703">https://nvd.nist.gov/vuln/detail/CVE-2026-1703</a>
+          <a href="https://www.cve.org/CVERecord?id=CVE-2026-1703">https://www.cve.org/CVERecord?id=CVE-2026-1703</a>
+        </td>
+      </tr>
+      <tr class="severity-MEDIUM">
+        <td class="pkg-name">setuptools</td>
+        <td>CVE-2026-59890</td>
+        <td class="severity">MEDIUM</td>
+        <td class="pkg-version">79.0.1</td>
+        <td>83.0.0</td>
+        <td class="links" data-more-links="off">
+          <a href="https://access.redhat.com/security/cve/CVE-2026-59890">https://access.redhat.com/security/cve/CVE-2026-59890</a>
+          <a href="https://github.com/pypa/advisory-database/tree/main/vulns/setuptools/PYSEC-2026-3447.yaml">https://github.com/pypa/advisory-database/tree/main/vulns/setuptools/PYSEC-2026-3447.yaml</a>
+          <a href="https://github.com/pypa/setuptools">https://github.com/pypa/setuptools</a>
+          <a href="https://github.com/pypa/setuptools/commit/dd9f436a36486b4cb8a4c70a2321548b0be09b8f">https://github.com/pypa/setuptools/commit/dd9f436a36486b4cb8a4c70a2321548b0be09b8f</a>
+          <a href="https://github.com/pypa/setuptools/releases/tag/v83.0.0">https://github.com/pypa/setuptools/releases/tag/v83.0.0</a>
+          <a href="https://github.com/pypa/setuptools/security/advisories/GHSA-h35f-9h28-mq5c">https://github.com/pypa/setuptools/security/advisories/GHSA-h35f-9h28-mq5c</a>
+          <a href="https://nvd.nist.gov/vuln/detail/CVE-2026-59890">https://nvd.nist.gov/vuln/detail/CVE-2026-59890</a>
+          <a href="https://www.cve.org/CVERecord?id=CVE-2026-59890">https://www.cve.org/CVERecord?id=CVE-2026-59890</a>
+        </td>
+      </tr>
+      <tr class="severity-HIGH">
+        <td class="pkg-name">wheel</td>
+        <td>CVE-2026-24049</td>
+        <td class="severity">HIGH</td>
+        <td class="pkg-version">0.45.1</td>
+        <td>0.46.2</td>
+        <td class="links" data-more-links="off">
+          <a href="https://access.redhat.com/errata/RHSA-2026:10184">https://access.redhat.com/errata/RHSA-2026:10184</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:13545">https://access.redhat.com/errata/RHSA-2026:13545</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:14020">https://access.redhat.com/errata/RHSA-2026:14020</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:1504">https://access.redhat.com/errata/RHSA-2026:1504</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:17599">https://access.redhat.com/errata/RHSA-2026:17599</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:1902">https://access.redhat.com/errata/RHSA-2026:1902</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:1939">https://access.redhat.com/errata/RHSA-2026:1939</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:1942">https://access.redhat.com/errata/RHSA-2026:1942</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:19712">https://access.redhat.com/errata/RHSA-2026:19712</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:20089">https://access.redhat.com/errata/RHSA-2026:20089</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:2090">https://access.redhat.com/errata/RHSA-2026:2090</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:2106">https://access.redhat.com/errata/RHSA-2026:2106</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:2139">https://access.redhat.com/errata/RHSA-2026:2139</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:2675">https://access.redhat.com/errata/RHSA-2026:2675</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:2681">https://access.redhat.com/errata/RHSA-2026:2681</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:2694">https://access.redhat.com/errata/RHSA-2026:2694</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:2695">https://access.redhat.com/errata/RHSA-2026:2695</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:2710">https://access.redhat.com/errata/RHSA-2026:2710</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:2754">https://access.redhat.com/errata/RHSA-2026:2754</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:2762">https://access.redhat.com/errata/RHSA-2026:2762</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:2823">https://access.redhat.com/errata/RHSA-2026:2823</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:2865">https://access.redhat.com/errata/RHSA-2026:2865</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:2866">https://access.redhat.com/errata/RHSA-2026:2866</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:2900">https://access.redhat.com/errata/RHSA-2026:2900</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:2925">https://access.redhat.com/errata/RHSA-2026:2925</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:3461">https://access.redhat.com/errata/RHSA-2026:3461</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:3462">https://access.redhat.com/errata/RHSA-2026:3462</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:3713">https://access.redhat.com/errata/RHSA-2026:3713</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:3782">https://access.redhat.com/errata/RHSA-2026:3782</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:3958">https://access.redhat.com/errata/RHSA-2026:3958</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:3959">https://access.redhat.com/errata/RHSA-2026:3959</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:3960">https://access.redhat.com/errata/RHSA-2026:3960</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:4185">https://access.redhat.com/errata/RHSA-2026:4185</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:4215">https://access.redhat.com/errata/RHSA-2026:4215</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:4271">https://access.redhat.com/errata/RHSA-2026:4271</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:4942">https://access.redhat.com/errata/RHSA-2026:4942</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:5119">https://access.redhat.com/errata/RHSA-2026:5119</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:6192">https://access.redhat.com/errata/RHSA-2026:6192</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:6555">https://access.redhat.com/errata/RHSA-2026:6555</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:6562">https://access.redhat.com/errata/RHSA-2026:6562</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:6565">https://access.redhat.com/errata/RHSA-2026:6565</a>
+          <a href="https://access.redhat.com/errata/RHSA-2026:7250">https://access.redhat.com/errata/RHSA-2026:7250</a>
+          <a href="https://access.redhat.com/security/cve/CVE-2026-24049">https://access.redhat.com/security/cve/CVE-2026-24049</a>
+          <a href="https://bugzilla.redhat.com/2431959">https://bugzilla.redhat.com/2431959</a>
+          <a href="https://bugzilla.redhat.com/show_bug.cgi?id=2431959">https://bugzilla.redhat.com/show_bug.cgi?id=2431959</a>
+          <a href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-24049">https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-24049</a>
+          <a href="https://errata.almalinux.org/9/ALSA-2026-1939.html">https://errata.almalinux.org/9/ALSA-2026-1939.html</a>
+          <a href="https://errata.rockylinux.org/RLSA-2026:1939">https://errata.rockylinux.org/RLSA-2026:1939</a>
+          <a href="https://github.com/pypa/wheel">https://github.com/pypa/wheel</a>
+          <a href="https://github.com/pypa/wheel/commit/7a7d2de96b22a9adf9208afcc9547e1001569fef">https://github.com/pypa/wheel/commit/7a7d2de96b22a9adf9208afcc9547e1001569fef</a>
+          <a href="https://github.com/pypa/wheel/commit/934fe177ff912c8e03d5ae951d3805e1fd90ba5e">https://github.com/pypa/wheel/commit/934fe177ff912c8e03d5ae951d3805e1fd90ba5e</a>
+          <a href="https://github.com/pypa/wheel/releases/tag/0.46.2">https://github.com/pypa/wheel/releases/tag/0.46.2</a>
+          <a href="https://github.com/pypa/wheel/security/advisories/GHSA-8rrh-rw8j-w5fx">https://github.com/pypa/wheel/security/advisories/GHSA-8rrh-rw8j-w5fx</a>
+          <a href="https://linux.oracle.com/cve/CVE-2026-24049.html">https://linux.oracle.com/cve/CVE-2026-24049.html</a>
+          <a href="https://linux.oracle.com/errata/ELSA-2026-2090.html">https://linux.oracle.com/errata/ELSA-2026-2090.html</a>
+          <a href="https://nvd.nist.gov/vuln/detail/CVE-2026-24049">https://nvd.nist.gov/vuln/detail/CVE-2026-24049</a>
+          <a href="https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-24049.json">https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-24049.json</a>
+          <a href="https://ubuntu.com/security/notices/USN-8221-1">https://ubuntu.com/security/notices/USN-8221-1</a>
+          <a href="https://www.cve.org/CVERecord?id=CVE-2026-24049">https://www.cve.org/CVERecord?id=CVE-2026-24049</a>
+        </td>
+      </tr>
+      <tr><th colspan="6">No Misconfigurations found</th></tr>
+    </table>
+  </body>
+</html>
