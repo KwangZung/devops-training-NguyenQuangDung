@@ -1,0 +1,29 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: train-iris-model
+  namespace: kserve-lab
+spec:
+  template:
+    spec:
+      containers:
+        - name: trainer
+          image: python:3.9-slim
+          command: ["bash", "-c"]
+          args:
+            - |
+              pip install scikit-learn joblib && python /scripts/train.py
+          volumeMounts:
+            - name: model-volume
+              mountPath: /mnt/models
+            - name: script-volume
+              mountPath: /scripts
+      volumes:
+        - name: model-volume
+          persistentVolumeClaim:
+            claimName: model-storage
+        - name: script-volume
+          configMap:
+            name: train-script
+      restartPolicy: Never
+  backoffLimit: 1  
