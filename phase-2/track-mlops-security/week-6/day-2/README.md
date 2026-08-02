@@ -99,6 +99,14 @@
   ```
   ![requests](./screenshots/number-requests-v1-v2.png)
 
+**Bước 8: Dọn dẹp tài nguyên**
+- Xóa toàn bộ các tài nguyên đã tạo trong bài Lab này (kéo theo việc xóa các Pod, Service liên quan) nhưng **GIỮ LẠI** cluster k3d `kserve-lab` để dùng cho Day 3:
+  ```bash
+  kubectl delete inferenceservice iris-model-v1 iris-model-v2 -n kserve-lab
+  kubectl delete -f api-gateway.yaml
+  kubectl delete -f gateway-route.yaml
+  ```
+
 ## 3. Kết quả
 
 ## 4. Khó khăn & cách giải quyết
