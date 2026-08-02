@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: data-copier
+  namespace: kserve-lab
+spec:
+  containers:
+  - name: data-copier
+    image: busybox
+    command: ["sh", "-c", "mkdir -p /mnt/models/v2 && cp /mnt/models/model.joblib /mnt/models/v2/model.joblib && sleep 3600"]
+    volumeMounts:
+    - name: model-volume
+      mountPath: /mnt/models
+  volumes:
+  - name: model-volume
+    persistentVolumeClaim:
+      claimName: model-storage
+  restartPolicy: Never
