@@ -5,7 +5,7 @@
 - **Intern**: `Nguyễn Quang Dũng`
 - **Phase / Week / Day**: `Phase 2 / Week 6 / Day 2`
 - **Branch**: `phase-2/week-6`
-- **Submitted at**: `2026-08-02 01:31` (timezone +07)
+- **Submitted at**: `2026-07-23 23:00` (timezone +07)
 - **Time spent**: `6h`
 
 ## 1. Mục tiêu
