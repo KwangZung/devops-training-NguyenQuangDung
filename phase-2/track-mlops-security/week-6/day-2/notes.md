@@ -6,7 +6,7 @@
   - Giảm thiểu rủi ro: Nếu phiên bản mới có lỗi, chỉ một lượng nhỏ request bị ảnh hưởng.
   - Thử nghiệm trên traffic thực tế (A/B Testing, đánh giá độ ổn định).
 - **Hạn chế của KServe RawDeployment**: Trong KServe, chế độ Serverless (dùng Knative) quản lý Canary hoàn hảo. Tuy nhiên, nếu dùng chế độ **RawDeployment** nhẹ nhàng mà không cài đặt Istio hay Gateway API, việc cấu hình `canaryTrafficPercent` sẽ không hoạt động đúng ý (do Kubernetes Service mặc định chỉ hỗ trợ chia tải Round-Robin). 
-- **Giải pháp thực tế**: Ở lớp Ingress, ta có thể dùng các Controller như **Traefik**, **Nginx Ingress** hoặc **Istio** để thực hiện **Weighted Routing** (Định tuyến theo trọng số). Ta chạy song song 2 Deployment và chia tải ở lớp Ingress (ví dụ `weight: 9` cho v1 và `weight: 1` cho v2).
+- **Giải pháp thực tế**: Tại tầng Ingress, việc sử dụng các Controller như **Traefik**, **Nginx Ingress** hoặc **Istio** hỗ trợ cơ chế **Weighted Routing** (Định tuyến theo trọng số). Mô hình được vận hành thông qua 2 Deployment song song, quá trình chia tải được xử lý tại lớp Ingress (ví dụ `weight: 9` cho v1 và `weight: 1` cho v2).
 
 ## 2. Load Testing (Kiểm thử tải)
 - **Định nghĩa**: Quá trình đo lường hiệu năng của hệ thống dưới áp lực lớn để tìm ra giới hạn và đảm bảo hệ thống có thể scale.

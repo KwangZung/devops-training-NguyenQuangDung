@@ -15,21 +15,21 @@
 
 ## 2. Các bước thực hiện
 
-*(Lưu ý: Bài Lab này sử dụng lại cluster k3d tên `kserve-lab` từ Day 1 & 2. Nếu chưa có, cần khởi tạo lại cluster bằng lệnh `k3d cluster create kserve-lab --agents 1`).*
+*(Lưu ý: Bài Lab này sử dụng lại cluster k3d tên `kserve-lab` từ Day 1 & 2. Cụm k3d này đã được khởi tạo bằng lệnh `k3d cluster create kserve-lab --agents 1`).*
 
 **Bước 1: Tạo Namespace và gán nhãn PSA**
-- Tạo 2 Namespace riêng biệt để cấu hình các chuẩn bảo mật khác nhau:
+- Tiến hành tạo 2 Namespace riêng biệt để cấu hình các chuẩn bảo mật khác nhau:
   ```bash
   kubectl create namespace ns-baseline
   kubectl create namespace ns-restricted
   ```
 - Gán label để kích hoạt PSA trên 2 Namespace này ở mode enforce và warn.
-- Cấu hình Namespace `ns-baseline`:
+- Cấu hình được áp dụng cho Namespace `ns-baseline`:
   ```bash
   kubectl label --overwrite ns ns-baseline pod-security.kubernetes.io/enforce=baseline
   kubectl label --overwrite ns ns-baseline pod-security.kubernetes.io/warn=baseline
   ```
-- Cấu hình Namespace `ns-restricted`:
+- Cấu hình được áp dụng cho Namespace `ns-restricted`:
   ```bash
   kubectl label --overwrite ns ns-restricted pod-security.kubernetes.io/enforce=restricted
   kubectl label --overwrite ns ns-restricted pod-security.kubernetes.io/warn=restricted
@@ -37,7 +37,7 @@
 
 **Bước 2: Kiểm tra chuẩn Baseline**
 - Chuẩn Baseline hạn chế các quyền hệ thống có rủi ro cao (như privileged) nhưng vẫn đảm bảo ứng dụng vận hành bình thường.
-- Tạo file `pod-nginx-normal.yaml`:
+- Tiến hành tạo file `pod-nginx-normal.yaml`:
   ```yaml
   apiVersion: v1
   kind: Pod
@@ -84,7 +84,7 @@
   ```
   *(Pod Nginx sẽ bị từ chối do vi phạm chuẩn restricted: "must not run as root", "seccompProfile").*
 
-- Để Pod vận hành được trong `ns-restricted`, cấu hình SecurityContext an toàn là bắt buộc. Tạo file `pod-secure.yaml`:
+- Để Pod vận hành được trong `ns-restricted`, cấu hình SecurityContext an toàn là bắt buộc. Tiến hành tạo file `pod-secure.yaml`:
   ```yaml
   apiVersion: v1
   kind: Pod
@@ -120,7 +120,7 @@
   ```
 
 ## 3. Kết quả
-*(Bổ sung ảnh screenshot terminal hiển thị quá trình báo lỗi `is forbidden: violates PodSecurity` khi triển khai các Pod vi phạm)*
+*(Ảnh screenshot terminal hiển thị quá trình báo lỗi `is forbidden: violates PodSecurity` khi triển khai các Pod vi phạm)*
 
 ## 4. Khó khăn & cách giải quyết
 - **Khó khăn**: Việc quản lý quyền của Pod bằng PodSecurityPolicy (PSP) đã không còn khả dụng trên các phiên bản Kubernetes mới. Việc thiết lập OPA Gatekeeper policy để thay thế cho các rule cơ bản đòi hỏi chi phí vận hành cao.
@@ -135,4 +135,4 @@
 - [x] README có hướng dẫn run lại.
 - [x] Không hard-code secret.
 - [x] Commit message theo Conventional Commits.
-- [x] Đã review lại code 1 lượt.
+- [x] Review lại code 1 lượt.

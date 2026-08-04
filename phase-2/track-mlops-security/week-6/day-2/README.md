@@ -12,57 +12,58 @@
 - Triển khai Canary Deployment cho mô hình với tỷ lệ traffic 90/10 thông qua KServe và Traefik IngressRoute.
 - Sử dụng `vegeta` để bắn tải (Load Testing) và phân tích sự phân bổ traffic thực tế vào 2 phiên bản mô hình.
 
-## 2. Cách chạy
+## 2. Quá trình triển khai
 
-*(Lưu ý: Bài Lab này kế thừa Kubernetes Cluster và namespace `kserve-lab` từ Day 1. Nếu chưa có, vui lòng chạy lại Bước 1, 2, 4 ở Day 1).*
+*(Quá trình triển khai kế thừa Kubernetes Cluster và namespace `kserve-lab` từ kết quả của Day 1).*
 
 **Bước 1: Chuẩn bị mô hình v2**
-- Trong thực tế, v2 có thể là một mô hình mới được train lại (retrain). Để tiết kiệm thời gian Lab, ta sẽ copy mô hình cũ ở PVC ra một thư mục khác và gọi nó là v2.
-- Tạo file [`data-copier.yaml`](./data-copier.yaml) và áp dụng để khởi chạy Pod sao chép:
+- Cấu hình mô hình v2 được chuẩn bị thông qua việc sao chép mô hình đã lưu tại PVC sang một thư mục độc lập mang tên v2.
+- Cấu hình file [`data-copier.yaml`](./data-copier.yaml) và áp dụng để khởi động Pod sao chép dữ liệu:
   ```bash
   kubectl apply -f data-copier.yaml
   ```
-- Chờ Pod chạy xong và dọn dẹp:
+- Quá trình theo dõi Pod hoàn tất và dọn dẹp tài nguyên:
   ```bash
   kubectl wait --for=condition=ready pod/data-copier -n kserve-lab --timeout=60s
   kubectl delete pod data-copier -n kserve-lab
   ```
 
 **Bước 2: Triển khai 2 phiên bản KServe InferenceService**
-- Khác với chế độ Serverless (Knative), chế độ RawDeployment của KServe không hỗ trợ chia traffic theo tỷ lệ một cách hoàn hảo. Thay vào đó, ta sẽ chạy 2 InferenceService độc lập và mượn Ingress Controller (Traefik) để chia tải.
-- Xóa bản cũ (nếu có):
+- Do chế độ RawDeployment của KServe có những hạn chế về phân bổ traffic theo tỷ lệ, quá trình triển khai cấu hình vận hành 2 InferenceService độc lập và sử dụng Ingress Controller (Traefik) để thực hiện chia tải.
+- Các cấu hình phiên bản cũ (nếu có) đã được xóa bỏ:
   ```bash
   kubectl delete inferenceservice iris-model -n kserve-lab --ignore-not-found
   ```
-- Tạo file [`iris-model-v1.yaml`](./iris-model-v1.yaml) (chạy bản gốc) và file [`iris-model-v2.yaml`](./iris-model-v2.yaml) (chạy bản v2 từ thư mục `/v2`).
-- Áp dụng cấu hình:
+- Các file cấu hình [`iris-model-v1.yaml`](./iris-model-v1.yaml) (vận hành bản gốc) và [`iris-model-v2.yaml`](./iris-model-v2.yaml) (vận hành bản v2 từ thư mục `/v2`) đã được chuẩn bị.
+- Quá trình áp dụng cấu hình triển khai:
   ```bash
   kubectl apply -f iris-model-v1.yaml
   kubectl apply -f iris-model-v2.yaml
   ```
-- Đợi cả 2 mô hình lên trạng thái READY:
+- Tiến trình theo dõi trạng thái hoạt động đến khi cả 2 mô hình đạt trạng thái READY:
   ```bash
   kubectl wait --for=condition=ready inferenceservice/iris-model-v1 -n kserve-lab --timeout=300s
+  ```
 **Bước 3: Triển khai NGINX API Gateway (Server-Side Canary)**
-- Do chế độ RawDeployment của KServe không tự Rewrite URL, ta sẽ dựng một NGINX đóng vai trò làm API Gateway. Nginx sẽ đứng ra nhận mọi request từ người dùng, tự động chia tải tỷ lệ 9:1 và Rewrite URL cho khớp với chuẩn của 2 model v1, v2.
-- Tạo và áp dụng file [`api-gateway.yaml`](./api-gateway.yaml):
+- Khởi tạo hệ thống NGINX đóng vai trò API Gateway nhằm xử lý giới hạn Rewrite URL của chế độ RawDeployment. Thành phần này được thiết lập để tiếp nhận toàn bộ request, điều hướng phân bổ traffic theo tỷ lệ 9:1 và Rewrite URL tương ứng với 2 phiên bản mô hình.
+- Cấu hình file [`api-gateway.yaml`](./api-gateway.yaml) được xây dựng và áp dụng vào hệ thống:
   ```bash
   kubectl apply -f api-gateway.yaml
   ```
-- Đợi Nginx khởi động xong:
+- Theo dõi trạng thái khởi động của tiến trình Nginx:
   ```bash
   kubectl wait --for=condition=ready pod -l app=api-gateway -n kserve-lab --timeout=60s
   ```
 
 **Bước 4: Trỏ IngressRoute vào API Gateway**
-- Tạo file [`gateway-route.yaml`](./gateway-route.yaml) để cấu hình Traefik đẩy toàn bộ traffic của KServe vào cho NGINX Gateway xử lý.
-- Áp dụng cấu hình:
+- Cấu hình file [`gateway-route.yaml`](./gateway-route.yaml) được áp dụng nhằm điều hướng Traefik chuyển tiếp traffic KServe tới NGINX Gateway.
+- Quá trình áp dụng cấu hình:
   ```bash
   kubectl apply -f gateway-route.yaml
   ```
 
 **Bước 5: Cài đặt công cụ Vegeta**
-- Cài đặt `vegeta` trên máy Ubuntu/WSL:
+- Quá trình cài đặt công cụ `vegeta` trên môi trường làm việc:
   ```bash
   wget https://github.com/tsenart/vegeta/releases/download/v12.11.1/vegeta_12.11.1_linux_amd64.tar.gz
   tar -zxvf vegeta_12.11.1_linux_amd64.tar.gz
@@ -71,25 +72,25 @@
   ```
 
 **Bước 6: Load Testing với Vegeta**
-- Tạo file [`target.txt`](./target.txt) định nghĩa đúng 1 request chuẩn:
+- Cấu hình file [`target.txt`](./target.txt) để định nghĩa chi tiết mẫu request đo kiểm:
   ```text
   POST http://localhost:8082/v1/models/iris-model:predict
   Content-Type: application/json
   @../day-1/iris-input.json
   ```
-  *(Lưu ý: Ta bắn thẳng vào cổng LoadBalancer `8082` của k3d đã mở ở Bước 1 Day 1).*
-- Bắn tải với tốc độ 50 RPS trong vòng 20 giây (Tổng cộng 1000 requests):
+  *(Quá trình tải được hướng thẳng tới cổng LoadBalancer `8082` của k3d).*
+- Thực thi kịch bản Load Testing với tốc độ 50 RPS trong thời gian 20 giây (Tổng lượng request 1000):
   ```bash
   vegeta attack -rate=50 -duration=20s -targets=target.txt > results.bin
   ```
 
 **Bước 7: Thống kê kết quả Load Testing**
-- Xem báo cáo đo độ trễ và tỷ lệ thành công:
+- Kết quả phân tích báo cáo đo lường độ trễ và tỷ lệ phản hồi thành công:
   ```bash
   vegeta report results.bin
   ```
   ![report](./screenshots/vegeta-report.png)
-- Xem thống kê log của 2 bản deployment (v1 và v2) trên k3d để chứng minh NGINX Gateway đã chia traffic chuẩn 9:1 (Server-Side Canary):
+- Kết quả thống kê thông tin log từ 2 bản deployment (v1 và v2) để đối soát tỷ lệ chia tải 9:1 của NGINX Gateway (Server-Side Canary):
   ```bash
   echo "--- Số request vào v1 ---"
   kubectl logs deployment/iris-model-v1-predictor -n kserve-lab --tail=5000 | grep "uvicorn.access" | wc -l
@@ -100,7 +101,7 @@
   ![requests](./screenshots/number-requests-v1-v2.png)
 
 **Bước 8: Dọn dẹp tài nguyên**
-- Xóa toàn bộ các tài nguyên đã tạo trong bài Lab này (kéo theo việc xóa các Pod, Service liên quan) nhưng **GIỮ LẠI** cluster k3d `kserve-lab` để dùng cho Day 3:
+- Tiến hành xóa các tài nguyên được khởi tạo trong phần này (bao gồm Pod, Service) và **DUY TRÌ** cluster k3d `kserve-lab` cho giai đoạn tiếp theo:
   ```bash
   kubectl delete inferenceservice iris-model-v1 iris-model-v2 -n kserve-lab
   kubectl delete -f api-gateway.yaml
@@ -111,7 +112,7 @@
 
 ## 4. Khó khăn & cách giải quyết
 - **Khó khăn**: Chế độ `RawDeployment` (không có Istio/Knative) của KServe gặp giới hạn khi dùng tính năng `canaryTrafficPercent`. Hơn nữa, KServe chặn không cho phép ghi đè trường `name` của model bên trong Predictor. Điều này dẫn đến việc không thể dùng Traefik IngressRoute để ép 2 model (v1 và v2) dùng chung 1 URL `/v1/models/iris-model:predict` (KServe sẽ báo 404).
-- **Cách giải quyết**: Xây dựng một **NGINX API Gateway** thu nhỏ. Nginx sẽ hứng toàn bộ request chung `/v1/models/iris-model:predict`, sử dụng module `split_clients` để tự động chia tải 90/10, sau đó **Rewrite URL** tương ứng rồi `proxy_pass` xuống KServe v1 và v2. Cách này thể hiện đúng chuẩn tinh thần Server-Side Canary Routing cực kỳ chuyên nghiệp của DevOps!
+- **Cách giải quyết**: Triển khai giải pháp **NGINX API Gateway** trung gian. Cấu hình Nginx tiếp nhận toàn bộ request chung tại `/v1/models/iris-model:predict`, áp dụng module `split_clients` để tự động phân bổ traffic tỷ lệ 90/10. Tiếp theo, hệ thống thực hiện **Rewrite URL** và `proxy_pass` đến các phiên bản KServe v1 và v2 tương ứng. Giải pháp này đáp ứng nguyên lý kỹ thuật Server-Side Canary Routing.
 
 ## 5. Reference
 - [Vegeta GitHub](https://github.com/tsenart/vegeta)
@@ -122,4 +123,4 @@
 - [x] README có hướng dẫn run lại.
 - [x] Không hard-code secret.
 - [x] Commit message theo Conventional Commits.
-- [x] Đã review lại code 1 lượt.
+- [x] Review lại code 1 lượt.

@@ -76,7 +76,7 @@ Triển khai tiêu chuẩn của KServe gán mỗi InferenceService với một 
 
 ### Canary Rollout (Traffic Splitting)
 
-KServe hỗ trợ triển khai Canary trực tiếp trên InferenceService trong chế độ Serverless Mode. Ta cấu hình thuộc tính canaryTrafficPercent bên trong spec của Predictor:
+KServe hỗ trợ triển khai Canary trực tiếp trên InferenceService trong chế độ Serverless Mode. Thuộc tính canaryTrafficPercent bên trong spec của Predictor được cấu hình như sau:
 
 ```yaml
 apiVersion: "serving.kserve.io/v1beta1"
@@ -95,8 +95,8 @@ spec:
 Cơ chế hoạt động:
 - KServe tự động ghi nhớ phiên bản ổn định gần nhất nhận 100% traffic (Last Known Good Revision).
 - Khi áp dụng manifest mới có canaryTrafficPercent: 10, KServe tạo Revision mới và điều hướng 10% request sang Revision mới, 90% còn lại vẫn đi vào Revision cũ.
-- Để Promote (thăng cấp): Tăng canaryTrafficPercent lên 100 hoặc xóa trường này.
-- Để Rollback: Đặt canaryTrafficPercent: 0.
+- Quá trình Promote (thăng cấp): Tăng giá trị canaryTrafficPercent lên 100 hoặc xóa bỏ trường này.
+- Quá trình Rollback: Đặt giá trị canaryTrafficPercent về 0.
 
 ### Tùy chọn lưu trữ mô hình (Storage Options)
 

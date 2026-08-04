@@ -17,11 +17,11 @@
 ## 2. Các bước thực hiện
 
 **Bước 1: Khởi tạo Cluster mới & Cài đặt Gatekeeper**
-- Do Gatekeeper can thiệp sâu vào API Server, một cụm k3d độc lập sẽ được khởi tạo để duy trì tính toàn vẹn cho môi trường:
+- Do Gatekeeper can thiệp sâu vào API Server, một cụm k3d độc lập đã được khởi tạo để duy trì tính toàn vẹn cho môi trường:
   ```bash
   k3d cluster create security-lab --agents 1
   ```
-- Cài đặt OPA Gatekeeper (v3.16.0) bằng tài liệu cấu hình YAML chính thức:
+- Tiến hành cài đặt OPA Gatekeeper (v3.16.0) bằng tài liệu cấu hình YAML chính thức:
   ```bash
   kubectl apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper/v3.16.0/deploy/gatekeeper.yaml
   ```
@@ -40,7 +40,7 @@
   ```bash
   kubectl apply -f constraint-block-latest.yaml
   ```
-- Chờ hệ thống đồng bộ policy, sau đó triển khai một Pod sử dụng tag `:latest` (`bad-pod-latest.yaml`):
+- Chờ hệ thống đồng bộ policy, sau đó tiến hành triển khai một Pod sử dụng tag `:latest` (`bad-pod-latest.yaml`):
   ```bash
   kubectl apply -f bad-pod-latest.yaml
   ```
@@ -48,7 +48,7 @@
 
 **Bước 3: Sử dụng Gatekeeper Library (Ngăn chặn Privileged & NonRoot)**
 - Thay vì tự phát triển mã Rego, các policy tiêu chuẩn có thể được tái sử dụng từ thư viện cộng đồng.
-- Cài đặt Template từ chối Privileged Pod:
+- Tiến hành cài đặt Template từ chối Privileged Pod:
   ```bash
   kubectl apply -f https://raw.githubusercontent.com/open-policy-agent/gatekeeper-library/master/library/pod-security-policy/privileged-containers/template.yaml
   ```
@@ -74,13 +74,13 @@
   *(Kết quả: Quá trình khởi tạo bị từ chối với thông báo: `Privileged container is not allowed...`).*
 
 **Bước 4: Dọn dẹp tài nguyên**
-- Xóa cụm k3d sau khi hoàn thành bài Lab:
+- Tiến hành xóa cụm k3d sau khi hoàn thành bài Lab:
   ```bash
   k3d cluster delete security-lab
   ```
 
 ## 3. Kết quả
-*(Bổ sung ảnh screenshot terminal quá trình Gatekeeper từ chối `bad-pod-latest.yaml` và lệnh `kubectl run bad-hacker`)*
+*(Ảnh screenshot terminal quá trình Gatekeeper từ chối `bad-pod-latest.yaml` và lệnh `kubectl run bad-hacker`)*
 
 ## 4. Khó khăn & cách giải quyết
 - **Khó khăn**: OPA Gatekeeper cung cấp khả năng quản lý linh hoạt hơn PSA (Pod Security Admission), tuy nhiên việc làm quen với ngôn ngữ Rego để viết ConstraintTemplate tạo ra rào cản kỹ thuật.
@@ -95,4 +95,4 @@
 - [x] README có hướng dẫn run lại.
 - [x] Không hard-code secret.
 - [x] Commit message theo Conventional Commits.
-- [x] Đã review lại code 1 lượt.
+- [x] Review lại code 1 lượt.

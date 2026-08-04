@@ -14,38 +14,38 @@
 - Tạo InferenceService để phục vụ mô hình đó thông qua KServe.
 - Gửi request suy luận và nhận kết quả dự đoán thành công.
 
-## 2. Cách chạy
+## 2. Quá trình triển khai
 
 **Bước 1: Khởi tạo Kubernetes Cluster bằng k3d**
-- Tạo một Cluster k3d có tên `kserve-lab`:
+- Tiến hành tạo một Cluster k3d có tên `kserve-lab`:
   ```bash
   k3d cluster create kserve-lab --agents 1 -p "8082:80@loadbalancer"
   ```
-- Kiểm tra Cluster đã sẵn sàng:
+- Kiểm tra trạng thái Cluster đã sẵn sàng:
   ```bash
   kubectl get nodes
   ```
   ![ready](./screenshots/check-cluster-ready.png)
 
 **Bước 2: Cài đặt KServe (chế độ RawDeployment)**
-- Ta sử dụng chế độ RawDeployment để tránh phải cài Knative và Istio (nặng và phức tạp cho môi trường Lab). Chế độ này dùng Kubernetes Deployment + Service + HPA thuần túy.
-- Cài đặt công cụ `kustomize` và `jq` (bắt buộc cho script cài đặt của KServe):
+- Quá trình triển khai sử dụng chế độ RawDeployment để tránh cài đặt Knative và Istio. Chế độ này sử dụng Kubernetes Deployment, Service và HPA thuần túy.
+- Tiến hành cài đặt công cụ `kustomize` và `jq` (yêu cầu bắt buộc cho kịch bản cài đặt của KServe):
   ```bash
   sudo apt-get update && sudo apt-get install jq -y
   curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
   sudo mv kustomize /usr/local/bin/
   ```
-- Clone repository KServe và chạy script cài đặt:
+- Thực hiện clone repository KServe và khởi chạy kịch bản cài đặt:
   ```bash
   git clone https://github.com/kserve/kserve.git
   cd kserve
   ./hack/kserve-install.sh -r --kustomize
   ```
-- Đợi KServe Controller sẵn sàng:
+- Theo dõi và chờ đợi KServe Controller chuyển sang trạng thái sẵn sàng:
   ```bash
   kubectl wait --for=condition=ready pod --all -n kserve --timeout=300s
   ```
-- Cài đặt các ClusterServingRuntime mặc định (bắt buộc để chạy được mô hình sklearn, xgboost...):
+- Áp dụng cấu hình ClusterServingRuntime mặc định (bắt buộc để vận hành các mô hình sklearn, xgboost...):
   ```bash
   kubectl apply -k config/runtimes
   ```
@@ -53,18 +53,18 @@
   ```bash
   cd ..
   ```
-- Kiểm tra KServe đã cài thành công:
+- Xác nhận trạng thái KServe đã được cài đặt thành công:
   ```bash
   kubectl get pods -n kserve
   ```
   ![kserve](./screenshots/kserve-pods.png)
 
 **Bước 4: Huấn luyện mô hình và lưu lên PVC**
-- Tạo Namespace riêng cho bài Lab:
+- Khởi tạo Namespace dành riêng cho quá trình triển khai:
   ```bash
   kubectl create namespace kserve-lab
   ```
-- Tạo PersistentVolumeClaim để lưu trữ file model. Tạo file [`pvc.yaml`](./pvc.yaml):
+- Triển khai PersistentVolumeClaim để lưu trữ file model. Các cấu hình được lưu tại file [`pvc.yaml`](./pvc.yaml):
   ```yaml
   apiVersion: v1
   kind: PersistentVolumeClaim
@@ -81,7 +81,7 @@
   ```bash
   kubectl apply -f pvc.yaml
   ```
-- Tạo file [`train.py`](./train.py) để huấn luyện mô hình Iris Classification và lưu ra file `model.joblib`:
+- Chuẩn bị file mã nguồn [`train.py`](./train.py) dùng để huấn luyện mô hình Iris Classification và lưu kết quả ra file `model.joblib`:
   ```python
   from sklearn.datasets import load_iris
   from sklearn.ensemble import RandomForestClassifier
@@ -103,7 +103,7 @@
   joblib.dump(model, model_path)
   print(f"Model saved to {model_path}")
   ```
-- Tạo file [`train-job.yaml`](./train-job.yaml) để chạy huấn luyện dưới dạng Kubernetes Job, mount PVC vào `/mnt/models`:
+- Xây dựng file [`train-job.yaml`](./train-job.yaml) nhằm thực thi quá trình huấn luyện dưới dạng Kubernetes Job, thực hiện mount PVC vào `/mnt/models`:
   ```yaml
   apiVersion: batch/v1
   kind: Job
@@ -135,12 +135,12 @@
         restartPolicy: Never
     backoffLimit: 1
   ```
-- Tạo ConfigMap chứa nội dung file `train.py` và chạy Job:
+- Đóng gói nội dung file `train.py` vào ConfigMap và khởi chạy Job:
   ```bash
   kubectl create configmap train-script --from-file=train.py -n kserve-lab
   kubectl apply -f train-job.yaml
   ```
-- Đợi Job hoàn tất:
+- Chờ tiến trình Job hoàn tất và kiểm tra kết quả:
   ```bash
   kubectl wait --for=condition=complete job/train-iris-model -n kserve-lab --timeout=300s
   kubectl logs job/train-iris-model -n kserve-lab
@@ -148,7 +148,7 @@
     ![train](./screenshots/train-success.png)
 
 **Bước 5: Tạo InferenceService triển khai mô hình**
-- Tạo file [`inference-service.yaml`](./inference-service.yaml). InferenceService sẽ đọc file model từ PVC và phục vụ suy luận qua giao thức V2:
+- Cấu hình file [`inference-service.yaml`](./inference-service.yaml) để đọc model từ PVC và cung cấp dịch vụ phân tích thông qua giao thức V2:
   ```yaml
   apiVersion: "serving.kserve.io/v1beta1"
   kind: "InferenceService"
@@ -174,18 +174,18 @@
   ```bash
   kubectl apply -f inference-service.yaml
   ```
-- Kiểm tra trạng thái InferenceService:
+- Xác nhận trạng thái InferenceService:
   ```bash
   kubectl get inferenceservice iris-model -n kserve-lab
   ```
-- Đợi cho đến khi cột READY chuyển thành True:
+- Quá trình chờ đến khi cột READY chuyển sang trạng thái True:
   ```bash
   kubectl wait --for=condition=ready inferenceservice/iris-model -n kserve-lab --timeout=300s
   ```
   ![is ready](./screenshots/inference-service-ready.png)
 
 **Bước 6: Gửi request suy luận và kiểm tra kết quả**
-- Tạo file [`iris-input.json`](./iris-input.json) chứa dữ liệu đầu vào (2 mẫu hoa Iris):
+- Chuẩn bị file dữ liệu đầu vào [`iris-input.json`](./iris-input.json) (bao gồm 2 mẫu hoa Iris):
   ```json
   {
     "instances": [
@@ -194,25 +194,25 @@
     ]
   }
   ```
-- Port-forward Service của InferenceService để truy cập từ máy Host:
+- Tiến hành Port-forward cho Service của InferenceService nhằm truy cập từ máy Host:
   ```bash
   kubectl port-forward svc/iris-model-predictor -n kserve-lab 8081:80
   ```
-- Mở Terminal mới và gửi request suy luận bằng curl:
+- Thực hiện gửi request suy luận thông qua lệnh curl từ môi trường Terminal mới:
   ```bash
   curl -v http://localhost:8081/v1/models/iris-model:predict -d @input.json -H "Content-Type: application/json"
   ```
-- Kết quả trả về:
+- Kết quả thu được từ hệ thống:
   ```json
   {
     "predictions": [1, 1]
   }
   ```
-  Kết quả `[1, 1]` nghĩa là cả hai mẫu dữ liệu đầu vào đều được phân loại vào loài Iris Versicolor (class 1 trong dataset Iris).
+  Kết quả `[1, 1]` thể hiện cả hai mẫu dữ liệu đầu vào đã được phân loại vào loài Iris Versicolor (class 1 trong tập dữ liệu Iris).
   ![curl](./screenshots/inference-result.png)
 
 **Bước 7: Dọn dẹp tài nguyên**
-- Sau khi hoàn tất bài Lab, xóa toàn bộ tài nguyên đã tạo:
+- Tiến hành xóa toàn bộ tài nguyên được tạo ra trong hệ thống sau khi hoàn thành:
   ```bash
   kubectl delete inferenceservice iris-model -n kserve-lab
   kubectl delete job train-iris-model -n kserve-lab
@@ -236,4 +236,4 @@
 - [ ] README có hướng dẫn run lại.
 - [ ] Không hard-code secret.
 - [ ] Commit message theo Conventional Commits.
-- [ ] Đã review lại code 1 lượt.
+- [ ] Review lại code 1 lượt.

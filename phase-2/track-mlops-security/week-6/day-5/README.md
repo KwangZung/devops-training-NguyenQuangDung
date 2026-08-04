@@ -15,19 +15,19 @@
 
 ## 2. Các bước thực hiện
 
-**Bước 1: Khởi tạo Local Registry & Cluster**
-- Để lưu trữ chữ ký số, Image cần được đẩy lên Docker Registry. Tiến hành khởi tạo registry cục bộ và kết nối k3d:
-- Khởi tạo Registry nội bộ (hoạt động ở cổng 5000):
+**Bước 1: Khởi tạo Local Registry và Cluster**
+- Để lưu trữ chữ ký số, Image cần được đẩy lên Docker Registry. Quá trình khởi tạo Registry cục bộ và kết nối k3d đã được thực hiện:
+- Khởi tạo Registry nội bộ (hoạt động ở Port 5000):
   ```bash
   k3d registry create registry.localhost --port 5000
   ```
-- Khởi tạo cụm k3d tên `cosign-lab`, cấu hình nhận diện registry:
+- Khởi tạo Cluster k3d tên `cosign-lab`, cấu hình nhận diện Registry:
   ```bash
   k3d cluster create cosign-lab --registry-use k3d-registry.localhost:5000
   ```
 
 **Bước 2: Cài đặt công cụ Cosign**
-- Tải và cấu hình `cosign` CLI cho môi trường Linux/WSL:
+- Quá trình tải và cấu hình `cosign` CLI cho môi trường Linux/WSL đã được thực hiện:
   ```bash
   wget https://github.com/sigstore/cosign/releases/download/v2.2.4/cosign-linux-amd64
   sudo mv cosign-linux-amd64 /usr/local/bin/cosign
@@ -35,11 +35,11 @@
   ```
 
 **Bước 3: Khởi tạo khóa và cấu hình Image**
-- Khởi tạo cặp khóa Public/Private Key bằng Cosign:
+- Khởi tạo Public/Private Key bằng Cosign:
   ```bash
   cosign generate-key-pair
   ```
-  *(Lệnh yêu cầu thiết lập mật khẩu (1111) bảo vệ cho file `cosign.key`. Hai tệp tin sẽ được sinh ra: [`cosign.key`](./cosign.key) và [`cosign.pub`](./cosign.pub))*
+  *(Lệnh yêu cầu thiết lập mật khẩu (1111) bảo vệ cho file `cosign.key`. Hai file sẽ được sinh ra: [`cosign.key`](./cosign.key) và [`cosign.pub`](./cosign.pub))*
 - Tải Image Nginx mẫu và đẩy lên Local Registry:
   ```bash
   docker pull nginx:alpine
@@ -52,21 +52,21 @@
   ```bash
   kubectl create -f https://github.com/kyverno/kyverno/releases/download/v1.11.4/install.yaml
   ```
-- Theo dõi cho đến khi hệ thống Kyverno hoàn tất quá trình khởi động:
+- Quan sát cho đến khi hệ thống Kyverno hoàn tất quá trình khởi động:
   ```bash
   kubectl wait --for=condition=ready pod --all -n kyverno --timeout=300s
   ```
 
 **Bước 5: Áp dụng Policy yêu cầu chữ ký**
-- Lấy khóa công khai cosign vừa tạo:
+- Lấy Public Key cosign vừa tạo:
   ```bash
   cat cosign.pub
   ```
-- Mở tệp tin [`policy-verify-image.yaml`](./policy-verify-image.yaml).
+- Mở file [`policy-verify-image.yaml`](./policy-verify-image.yaml).
   ```bash
   vi policy-verify-image.yaml
   ```
-- Chèn sau dòng `publicKeys: |-` bằng nội dung của tệp [`cosign.pub`](./cosign.pub) vừa tạo.
+- Chèn sau dòng `publicKeys: |-` bằng nội dung của file [`cosign.pub`](./cosign.pub) vừa tạo.
 - Áp dụng Policy vào Cluster:
   ```bash
   kubectl apply -f policy-verify-image.yaml
@@ -81,11 +81,11 @@
 ![block](./screenshots/kyverno-reject.png)
 
 **Bước 7: Ký số Image (Cosign Sign) và xác thực**
-- Tiến hành ký số lên Image bằng `cosign`. Cosign sẽ mã hóa bằng [`cosign.key`](./cosign.key) và đẩy chữ ký `.sig` lên registry:
+- Tiến hành ký số lên Image bằng `cosign`. Cosign mã hóa bằng [`cosign.key`](./cosign.key) và đẩy chữ ký `.sig` lên Registry:
   ```bash
   cosign sign --key cosign.key localhost:5000/my-nginx:latest --tlog-upload=false
   ```
-  *(Cung cấp mật khẩu (1111) đã thiết lập ở Bước 3 khi được yêu cầu)*.
+  *(Cung cấp mật khẩu (1111) thiết lập ở Bước 3 khi được yêu cầu)*.
 - Thử thực thi lại lệnh khởi tạo Pod:
   ```bash
   kubectl run test-signed --image=k3d-registry.localhost:5000/my-nginx:latest
@@ -94,7 +94,7 @@
 ![image](./screenshots/test-signed-success.png)
 
 **Bước 8: Dọn dẹp tài nguyên**
-- Xóa cụm k3d và registry để hoàn tất:
+- Xóa Cluster k3d và Registry để hoàn tất:
   ```bash
   k3d cluster delete cosign-lab
   k3d registry delete k3d-registry.localhost
@@ -104,8 +104,8 @@
 ## 3. Kết quả
 
 ## 4. Khó khăn & cách giải quyết
-- **Khó khăn**: Mặc dù quy trình Image Scanning (Trivy) đảm bảo tính an toàn của Image trên Registry, chưa có cơ chế xác minh tính toàn vẹn của Image khi được triển khai trên Kubernetes (tránh việc bị đánh tráo).
-- **Cách giải quyết**: Triển khai mô hình Supply Chain Security. Tích hợp Cosign để ký số lên Image ngay sau bước quét mã độc. Trên Kubernetes, cấu hình Kyverno làm Admission Controller nhằm kiểm tra chữ ký. Sự sai lệch do sửa đổi Image sẽ dẫn đến bất đồng mã Hash, khiến Kyverno tự động từ chối request, tuân thủ đúng kiến trúc Zero-Trust.
+- **Khó khăn**: Mặc dù quy trình Image Scanning đảm bảo tính an toàn của Image trên Registry, chưa có cơ chế xác minh tính toàn vẹn của Image khi được triển khai trên Kubernetes (tránh việc bị đánh tráo).
+- **Cách giải quyết**: Triển khai mô hình Supply Chain Security. Tích hợp Cosign để ký số lên Image ngay sau bước quét mã độc. Trên Kubernetes, cấu hình Kyverno làm Admission Controller nhằm kiểm tra chữ ký. Sự sai lệch do sửa đổi Image sẽ dẫn đến bất đồng Hash, khiến Kyverno tự động từ chối request, tuân thủ đúng kiến trúc Zero-Trust.
 
 ## 5. Reference
 - [Sigstore Cosign](https://docs.sigstore.dev/cosign/overview/)
@@ -116,4 +116,4 @@
 - [x] README có hướng dẫn run lại.
 - [x] Không hard-code secret.
 - [x] Commit message theo Conventional Commits.
-- [x] Đã review lại code 1 lượt.
+- [x] Review lại code 1 lượt.
