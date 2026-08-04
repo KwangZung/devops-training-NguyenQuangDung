@@ -1,0 +1,28 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: check-image-signature
+spec:
+  validationFailureAction: Enforce
+  background: false
+  rules:
+    - name: verify-image
+      match:
+        any:
+        - resources:
+            kinds:
+              - Pod
+      verifyImages:
+      - imageReferences:
+        - "k3d-registry.localhost:5000/*"
+        attestors:
+        - entries:
+          - keys:
+              publicKeys: |-
+                -----BEGIN PUBLIC KEY-----
+                MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEP5Li9+3ZzhYP+Ppe2MdcUKWYA6Ro
+                4dVT3/SeR0vk8hmIjkz60zoEdfTV5ajANfVtvJZ/GR1URTHj5yLxpBpNpQ==
+                -----END PUBLIC KEY-----
+              rekor:
+                url: https://rekor.sigstore.dev
+                ignoreTlog: true

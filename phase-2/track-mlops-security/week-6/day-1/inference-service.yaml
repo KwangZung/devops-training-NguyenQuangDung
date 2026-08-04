@@ -1,0 +1,18 @@
+apiVersion: "serving.kserve.io/v1beta1"
+kind: "InferenceService"
+metadata:
+  name: "iris-model"
+  namespace: "kserve-lab"
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: sklearn
+      storageUri: "pvc://model-storage"
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi

@@ -1,0 +1,14 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: api-gateway-route
+  namespace: kserve-lab
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: PathPrefix(`/v1/models/iris-model:predict`)
+    kind: Rule
+    services:
+    - name: api-gateway
+      port: 80

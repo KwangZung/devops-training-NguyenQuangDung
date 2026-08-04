@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secure-model
+  namespace: secure-serving
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: model
+  template:
+    metadata:
+      labels:
+        app: model
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: server
+        image: k3d-registry.localhost:5000/model-server:v1.0.0
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
